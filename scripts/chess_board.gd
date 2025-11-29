@@ -107,10 +107,10 @@ const DRAG_LIFT_SCALE = 1.15  # Scale up piece slightly when lifted
 
 # Board boundaries for drag constraint
 # Board texture is at (362, 110) with size 720x720
-const DRAG_BOARD_LEFT = 388.0    # Left edge
-const DRAG_BOARD_TOP = 100.0     # Top edge
-const DRAG_BOARD_RIGHT = 1057.0  # Right edge
-const DRAG_BOARD_BOTTOM = 782.0  # Bottom edge
+const DRAG_BOARD_LEFT = 389.0    # Left edge
+const DRAG_BOARD_TOP = 110.0     # Top edge
+const DRAG_BOARD_RIGHT = 1055.0  # Right edge
+const DRAG_BOARD_BOTTOM = 767.0  # Bottom edge
 
 # Border hit tracking
 var last_hit_borders: Array = []  # Which borders were hit last frame
