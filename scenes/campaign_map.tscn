@@ -1,0 +1,207 @@
+[gd_scene load_steps=8 format=3 uid="uid://campaign_map"]
+
+[ext_resource type="Script" path="res://scripts/campaign_map.gd" id="1_script"]
+[ext_resource type="FontFile" uid="uid://cflvlm6dee163" path="res://assets/fonts/editundo.ttf" id="2_font"]
+[ext_resource type="Texture2D" path="res://assets/pieces/ww2_top_view_hull8.png" id="3_hull"]
+[ext_resource type="Texture2D" path="res://assets/pieces/ww2_top_view_turret8.png" id="4_turret"]
+[ext_resource type="Texture2D" path="res://assets/pieces/sidebarmap.png" id="5_sidebar"]
+[ext_resource type="Script" path="res://scripts/campaign_draw_overlay.gd" id="6_overlay"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.08, 0.08, 0.1, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.3, 0.3, 0.35, 1)
+
+[node name="CampaignMap" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_script")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.05, 0.05, 0.08, 1)
+
+[node name="MapContainer" type="Node2D" parent="."]
+
+[node name="MissionNodes" type="Node2D" parent="MapContainer"]
+
+[node name="DrawOverlay" type="Node2D" parent="."]
+script = ExtResource("6_overlay")
+
+[node name="WeatherParticles" type="Node2D" parent="."]
+
+[node name="TankContainer" type="Node2D" parent="."]
+
+[node name="Tank" type="Node2D" parent="TankContainer"]
+position = Vector2(722, 470)
+
+[node name="Hull" type="Sprite2D" parent="TankContainer/Tank"]
+scale = Vector2(5, 5)
+texture = ExtResource("3_hull")
+texture_filter = 0
+
+[node name="Turret" type="Sprite2D" parent="TankContainer/Tank"]
+position = Vector2(0, -5)
+scale = Vector2(5, 5)
+texture = ExtResource("4_turret")
+texture_filter = 0
+
+[node name="LeftPanel" type="Panel" parent="."]
+custom_minimum_size = Vector2(260, 0)
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_right = 260.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="VBox" type="VBoxContainer" parent="LeftPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 150.0
+offset_right = -20.0
+offset_bottom = -150.0
+theme_override_constants/separation = 20
+
+[node name="HeaderLabel" type="Label" parent="LeftPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 22
+text = "ENEMY INTEL"
+horizontal_alignment = 1
+
+[node name="Separator1" type="HSeparator" parent="LeftPanel/VBox"]
+layout_mode = 2
+
+[node name="ZoneTitle" type="Label" parent="LeftPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 28
+text = "CHAPTER 1"
+horizontal_alignment = 1
+
+[node name="ZoneSubtitle" type="Label" parent="LeftPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 20
+text = "PAWN'S FRONT"
+horizontal_alignment = 1
+
+[node name="Separator2" type="HSeparator" parent="LeftPanel/VBox"]
+layout_mode = 2
+
+[node name="Enemies" type="Label" parent="LeftPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.4, 0.4, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 16
+text = "ENEMIES: Forest Insurgents"
+autowrap_mode = 2
+
+[node name="Special" type="Label" parent="LeftPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.8, 1, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 16
+text = "SPECIAL: Guerrilla Tactics"
+autowrap_mode = 2
+
+[node name="Boss" type="Label" parent="LeftPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.6, 0, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 16
+text = "BOSS: Unnamed Leader"
+autowrap_mode = 2
+
+[node name="Separator3" type="HSeparator" parent="LeftPanel/VBox"]
+layout_mode = 2
+
+[node name="Description" type="Label" parent="LeftPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.75, 0.75, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "First combat op. Clear insurgents from woodland territory."
+autowrap_mode = 2
+
+[node name="RightPanel" type="Panel" parent="."]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -200.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="VBox" type="VBoxContainer" parent="RightPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 15.0
+offset_top = 20.0
+offset_right = -15.0
+offset_bottom = -20.0
+theme_override_constants/separation = 12
+
+[node name="HeaderLabel" type="Label" parent="RightPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "TACTICAL MAP"
+horizontal_alignment = 1
+
+[node name="Separator1" type="HSeparator" parent="RightPanel/VBox"]
+layout_mode = 2
+
+[node name="Minimap" type="TextureRect" parent="RightPanel/VBox"]
+custom_minimum_size = Vector2(170, 650)
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("5_sidebar")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TankIndicator" type="ColorRect" parent="RightPanel/VBox/Minimap"]
+offset_right = 8.0
+offset_bottom = 8.0
+color = Color(0, 1, 0, 1)
+
+[node name="Separator2" type="HSeparator" parent="RightPanel/VBox"]
+layout_mode = 2
+
+[node name="ControlsLabel" type="Label" parent="RightPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 10
+text = "CONTROLS:
+W/S - Move
+A/D - Turn
+SPACE - Deploy
+ESC - Back"
+horizontal_alignment = 1
+
+[node name="FadeOverlay" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0, 0, 0, 1)

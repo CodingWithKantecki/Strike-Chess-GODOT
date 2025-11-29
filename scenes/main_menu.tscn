@@ -1,0 +1,322 @@
+[gd_scene load_steps=15 format=3 uid="uid://t6str81kj2jg"]
+
+[ext_resource type="Script" uid="uid://b62v6rmo46xbm" path="res://scripts/main_menu.gd" id="1_menu"]
+[ext_resource type="Texture2D" path="res://assets/pieces/Layer_0011_0.png" id="2_city0"]
+[ext_resource type="Texture2D" path="res://assets/pieces/Layer_0010_1.png" id="3_city1"]
+[ext_resource type="Texture2D" path="res://assets/pieces/Layer_0009_2.png" id="4_city2"]
+[ext_resource type="Texture2D" path="res://assets/pieces/Layer_0008_3.png" id="5_city3"]
+[ext_resource type="Texture2D" path="res://assets/pieces/Layer_0006_4.png" id="6_city4"]
+[ext_resource type="Texture2D" path="res://assets/pieces/Layer_0005_5.png" id="7_city5"]
+[ext_resource type="Texture2D" path="res://assets/pieces/Layer_0004_Lights.png" id="8_lights1"]
+[ext_resource type="Texture2D" path="res://assets/pieces/Layer_0007_Lights.png" id="9_lights2"]
+[ext_resource type="Texture2D" path="res://assets/pieces/logo.png" id="10_logo"]
+[ext_resource type="FontFile" uid="uid://cflvlm6dee163" path="res://assets/fonts/editundo.ttf" id="11_font"]
+[ext_resource type="Texture2D" path="res://assets/pieces/buttonborder.png" id="12_buttonborder"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_normal"]
+bg_color = Color(0.627, 0.627, 0.667, 1)
+corner_radius_top_left = 0
+corner_radius_top_right = 0
+corner_radius_bottom_right = 0
+corner_radius_bottom_left = 0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hover"]
+bg_color = Color(0.784, 0.784, 0.824, 1)
+corner_radius_top_left = 0
+corner_radius_top_right = 0
+corner_radius_bottom_right = 0
+corner_radius_bottom_left = 0
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_menu")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 1)
+
+[node name="ParallaxBackground" type="ParallaxBackground" parent="."]
+
+[node name="Layer0_Sky" type="ParallaxLayer" parent="ParallaxBackground"]
+motion_scale = Vector2(0.05, 0)
+motion_mirroring = Vector2(1920, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="ParallaxBackground/Layer0_Sky"]
+position = Vector2(960, 470)
+scale = Vector2(4, 4)
+texture = ExtResource("2_city0")
+
+[node name="Sprite2D2" type="Sprite2D" parent="ParallaxBackground/Layer0_Sky"]
+position = Vector2(2880, 470)
+scale = Vector2(4, 4)
+texture = ExtResource("2_city0")
+
+[node name="Layer1_Back" type="ParallaxLayer" parent="ParallaxBackground"]
+motion_scale = Vector2(0.1, 0)
+motion_mirroring = Vector2(1920, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="ParallaxBackground/Layer1_Back"]
+position = Vector2(960, 470)
+scale = Vector2(4, 4)
+texture = ExtResource("3_city1")
+
+[node name="Sprite2D2" type="Sprite2D" parent="ParallaxBackground/Layer1_Back"]
+position = Vector2(2880, 470)
+scale = Vector2(4, 4)
+texture = ExtResource("3_city1")
+
+[node name="Layer2" type="ParallaxLayer" parent="ParallaxBackground"]
+motion_scale = Vector2(0.15, 0)
+motion_mirroring = Vector2(1920, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="ParallaxBackground/Layer2"]
+position = Vector2(960, 470)
+scale = Vector2(4, 4)
+texture = ExtResource("4_city2")
+
+[node name="Sprite2D2" type="Sprite2D" parent="ParallaxBackground/Layer2"]
+position = Vector2(2880, 470)
+scale = Vector2(4, 4)
+texture = ExtResource("4_city2")
+
+[node name="Layer3" type="ParallaxLayer" parent="ParallaxBackground"]
+motion_scale = Vector2(0.2, 0)
+motion_mirroring = Vector2(1920, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="ParallaxBackground/Layer3"]
+position = Vector2(960, 470)
+scale = Vector2(4, 4)
+texture = ExtResource("5_city3")
+
+[node name="Sprite2D2" type="Sprite2D" parent="ParallaxBackground/Layer3"]
+position = Vector2(2880, 470)
+scale = Vector2(4, 4)
+texture = ExtResource("5_city3")
+
+[node name="Layer4" type="ParallaxLayer" parent="ParallaxBackground"]
+motion_scale = Vector2(0.25, 0)
+motion_mirroring = Vector2(1920, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="ParallaxBackground/Layer4"]
+position = Vector2(960, 470)
+scale = Vector2(4, 4)
+texture = ExtResource("6_city4")
+
+[node name="Sprite2D2" type="Sprite2D" parent="ParallaxBackground/Layer4"]
+position = Vector2(2880, 470)
+scale = Vector2(4, 4)
+texture = ExtResource("6_city4")
+
+[node name="Layer5_Lights" type="ParallaxLayer" parent="ParallaxBackground"]
+motion_scale = Vector2(0.25, 0)
+motion_mirroring = Vector2(1920, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="ParallaxBackground/Layer5_Lights"]
+position = Vector2(960, 470)
+scale = Vector2(4, 4)
+texture = ExtResource("8_lights1")
+
+[node name="Sprite2D2" type="Sprite2D" parent="ParallaxBackground/Layer5_Lights"]
+position = Vector2(2880, 470)
+scale = Vector2(4, 4)
+texture = ExtResource("8_lights1")
+
+[node name="Layer6" type="ParallaxLayer" parent="ParallaxBackground"]
+motion_scale = Vector2(0.35, 0)
+motion_mirroring = Vector2(1920, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="ParallaxBackground/Layer6"]
+position = Vector2(960, 470)
+scale = Vector2(4, 4)
+texture = ExtResource("7_city5")
+
+[node name="Sprite2D2" type="Sprite2D" parent="ParallaxBackground/Layer6"]
+position = Vector2(2880, 470)
+scale = Vector2(4, 4)
+texture = ExtResource("7_city5")
+
+[node name="Layer7_Lights" type="ParallaxLayer" parent="ParallaxBackground"]
+motion_scale = Vector2(0.35, 0)
+motion_mirroring = Vector2(1920, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="ParallaxBackground/Layer7_Lights"]
+position = Vector2(960, 470)
+scale = Vector2(4, 4)
+texture = ExtResource("9_lights2")
+
+[node name="Sprite2D2" type="Sprite2D" parent="ParallaxBackground/Layer7_Lights"]
+position = Vector2(2880, 470)
+scale = Vector2(4, 4)
+texture = ExtResource("9_lights2")
+
+[node name="FallingPieces" type="Node2D" parent="."]
+
+[node name="Logo" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -470.0
+offset_top = 30.0
+offset_right = 470.0
+offset_bottom = 500.0
+grow_horizontal = 2
+texture = ExtResource("10_logo")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ButtonContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -240.0
+offset_top = -40.0
+offset_right = 240.0
+offset_bottom = 380.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="PlayButtonFrame" type="NinePatchRect" parent="ButtonContainer"]
+custom_minimum_size = Vector2(480, 90)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("12_buttonborder")
+texture_filter = 0
+patch_margin_left = 16
+patch_margin_top = 16
+patch_margin_right = 16
+patch_margin_bottom = 16
+
+[node name="PlayButton" type="Button" parent="ButtonContainer/PlayButtonFrame"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -8.0
+theme_override_colors/font_color = Color(0.235, 0.235, 0.235, 1)
+theme_override_colors/font_hover_color = Color(0.1, 0.1, 0.1, 1)
+theme_override_fonts/font = ExtResource("11_font")
+theme_override_font_sizes/font_size = 32
+theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_normal")
+theme_override_styles/focus = SubResource("StyleBoxFlat_normal")
+text = "PLAY GAME"
+
+[node name="TutorialButtonFrame" type="NinePatchRect" parent="ButtonContainer"]
+custom_minimum_size = Vector2(480, 90)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("12_buttonborder")
+texture_filter = 0
+patch_margin_left = 16
+patch_margin_top = 16
+patch_margin_right = 16
+patch_margin_bottom = 16
+
+[node name="TutorialButton" type="Button" parent="ButtonContainer/TutorialButtonFrame"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -8.0
+theme_override_colors/font_color = Color(0.235, 0.235, 0.235, 1)
+theme_override_colors/font_hover_color = Color(0.1, 0.1, 0.1, 1)
+theme_override_fonts/font = ExtResource("11_font")
+theme_override_font_sizes/font_size = 32
+theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_normal")
+theme_override_styles/focus = SubResource("StyleBoxFlat_normal")
+text = "TUTORIAL"
+
+[node name="CreditsButtonFrame" type="NinePatchRect" parent="ButtonContainer"]
+custom_minimum_size = Vector2(480, 90)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("12_buttonborder")
+texture_filter = 0
+patch_margin_left = 16
+patch_margin_top = 16
+patch_margin_right = 16
+patch_margin_bottom = 16
+
+[node name="CreditsButton" type="Button" parent="ButtonContainer/CreditsButtonFrame"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -8.0
+theme_override_colors/font_color = Color(0.235, 0.235, 0.235, 1)
+theme_override_colors/font_hover_color = Color(0.1, 0.1, 0.1, 1)
+theme_override_fonts/font = ExtResource("11_font")
+theme_override_font_sizes/font_size = 32
+theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_normal")
+theme_override_styles/focus = SubResource("StyleBoxFlat_normal")
+text = "CREDITS"
+
+[node name="CardViewerButtonFrame" type="NinePatchRect" parent="ButtonContainer"]
+custom_minimum_size = Vector2(480, 90)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("12_buttonborder")
+texture_filter = 0
+patch_margin_left = 16
+patch_margin_top = 16
+patch_margin_right = 16
+patch_margin_bottom = 16
+
+[node name="CardViewerButton" type="Button" parent="ButtonContainer/CardViewerButtonFrame"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -8.0
+theme_override_colors/font_color = Color(0.235, 0.235, 0.235, 1)
+theme_override_colors/font_hover_color = Color(0.1, 0.1, 0.1, 1)
+theme_override_fonts/font = ExtResource("11_font")
+theme_override_font_sizes/font_size = 32
+theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_normal")
+theme_override_styles/focus = SubResource("StyleBoxFlat_normal")
+text = "CARD VIEWER"
+
+[node name="FadeOverlay" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[connection signal="pressed" from="ButtonContainer/PlayButtonFrame/PlayButton" to="." method="_on_play_pressed"]
+[connection signal="pressed" from="ButtonContainer/TutorialButtonFrame/TutorialButton" to="." method="_on_tutorial_pressed"]
+[connection signal="pressed" from="ButtonContainer/CreditsButtonFrame/CreditsButton" to="." method="_on_credits_pressed"]
+[connection signal="pressed" from="ButtonContainer/CardViewerButtonFrame/CardViewerButton" to="." method="_on_card_viewer_pressed"]

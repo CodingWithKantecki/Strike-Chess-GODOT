@@ -1,0 +1,76 @@
+[gd_scene load_steps=2 format=3 uid="uid://story_select"]
+
+[ext_resource type="Script" path="res://scripts/story_select.gd" id="1_story"]
+
+[node name="StorySelect" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_story")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.1, 0.1, 0.15, 1)
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -200.0
+offset_top = 50.0
+offset_right = 200.0
+offset_bottom = 100.0
+theme_override_font_sizes/font_size = 48
+text = "STORY MODE"
+horizontal_alignment = 1
+
+[node name="ChapterList" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -100.0
+offset_right = 150.0
+offset_bottom = 150.0
+theme_override_constants/separation = 15
+
+[node name="Chapter1" type="Button" parent="ChapterList"]
+custom_minimum_size = Vector2(300, 50)
+layout_mode = 2
+text = "Chapter 1: The Recruit"
+
+[node name="Chapter2" type="Button" parent="ChapterList"]
+custom_minimum_size = Vector2(300, 50)
+layout_mode = 2
+text = "Chapter 2: Rising Threat"
+
+[node name="Chapter3" type="Button" parent="ChapterList"]
+custom_minimum_size = Vector2(300, 50)
+layout_mode = 2
+text = "Chapter 3: Behind Lines"
+
+[node name="BackButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -100.0
+offset_top = -80.0
+offset_right = 100.0
+offset_bottom = -30.0
+text = "Back to Menu"
+
+[connection signal="pressed" from="ChapterList/Chapter1" to="." method="_on_chapter_pressed" binds=[1]]
+[connection signal="pressed" from="ChapterList/Chapter2" to="." method="_on_chapter_pressed" binds=[2]]
+[connection signal="pressed" from="ChapterList/Chapter3" to="." method="_on_chapter_pressed" binds=[3]]
+[connection signal="pressed" from="BackButton" to="." method="_on_back_pressed"]

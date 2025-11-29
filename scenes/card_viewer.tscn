@@ -1,0 +1,114 @@
+[gd_scene load_steps=3 format=3 uid="uid://card_viewer"]
+
+[ext_resource type="Script" path="res://scripts/card_viewer.gd" id="1_script"]
+[ext_resource type="FontFile" uid="uid://cflvlm6dee163" path="res://assets/fonts/editundo.ttf" id="2_font"]
+
+[node name="CardViewer" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_script")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.02, 0.02, 0.05, 1)
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -300.0
+offset_top = 30.0
+offset_right = 300.0
+offset_bottom = 80.0
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 48
+text = "TACTICAL ASSETS"
+horizontal_alignment = 1
+
+[node name="CardDisplay" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -280.0
+offset_right = 250.0
+offset_bottom = 220.0
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CardName" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -300.0
+offset_top = 100.0
+offset_right = 300.0
+offset_bottom = 140.0
+theme_override_colors/font_color = Color(0.4, 0.8, 1, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 32
+text = "SMOKE GRENADE"
+horizontal_alignment = 1
+
+[node name="CardCounter" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -100.0
+offset_top = -100.0
+offset_right = 100.0
+offset_bottom = -70.0
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 24
+text = "1 / 6"
+horizontal_alignment = 1
+
+[node name="LeftArrow" type="Polygon2D" parent="."]
+position = Vector2(80, 450)
+color = Color(1, 1, 1, 0.8)
+polygon = PackedVector2Array(30, 0, 0, 30, 30, 60)
+
+[node name="RightArrow" type="Polygon2D" parent="."]
+position = Vector2(1200, 450)
+color = Color(1, 1, 1, 0.8)
+polygon = PackedVector2Array(0, 0, 30, 30, 0, 60)
+
+[node name="HintLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -300.0
+offset_top = -50.0
+offset_right = 300.0
+offset_bottom = -20.0
+theme_override_colors/font_color = Color(0.4, 0.4, 0.4, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "< Click arrows to navigate | Click center to return >"
+horizontal_alignment = 1
+
+[node name="FadeOverlay" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
