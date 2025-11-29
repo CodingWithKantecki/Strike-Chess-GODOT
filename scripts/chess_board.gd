@@ -26,10 +26,12 @@ const BOARD_OFFSET = Vector2(398, 146)  # Top-left of playable area (362+36, 110
 # Pawns use larger scale, other pieces 15% smaller
 const PAWN_SCALE = 3.5
 const PIECE_SCALE = 2.975  # 15% smaller than pawns (3.5 * 0.85)
-const QUEEN_SCALE = 2.826  # 5% smaller than other pieces (2.975 * 0.95)
-const KING_SCALE = 2.7132  # 9% smaller than other pieces (2.856 * 0.95)
+const QUEEN_SCALE = 2.543  # 15% smaller than other pieces
+const KING_SCALE = 2.436  # 18% smaller than other pieces
 const PIECE_Y_OFFSET = -18  # Move pawns up to center them visually in squares
 const NON_PAWN_Y_ADJUST = 5  # Move non-pawns down 5 pixels relative to pawns
+const QUEEN_Y_ADJUST = 11  # Queen needs extra 6 pixels down (5 + 6)
+const KING_Y_ADJUST = 13  # King needs extra 8 pixels down (5 + 8)
 
 # Colors
 const LIGHT_SQUARE = Color(0.941, 0.851, 0.710)
@@ -200,8 +202,16 @@ func create_sprite_at(pos: Vector2i, piece: String):
 		scale = KING_SCALE
 	else:
 		scale = PIECE_SCALE
-	# Non-pawns are positioned 5px lower
-	var y_adjust = 0 if piece_type == "P" else NON_PAWN_Y_ADJUST
+	# Non-pawns are positioned lower, kings/queens have custom offsets
+	var y_adjust = 0
+	if piece_type == "P":
+		y_adjust = 0
+	elif piece_type == "K":
+		y_adjust = KING_Y_ADJUST
+	elif piece_type == "Q":
+		y_adjust = QUEEN_Y_ADJUST
+	else:
+		y_adjust = NON_PAWN_Y_ADJUST
 	sprite.position = base_pos + Vector2(0, y_adjust)
 	sprite.scale = Vector2(scale, scale)
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -305,8 +315,16 @@ func _lift_piece(pos: Vector2i):
 		var sprite = piece_sprites[pos]
 		var base_pos = board_to_screen(pos)
 		var piece = board[pos.y][pos.x]
-		var is_pawn = piece[1] == "P"
-		var y_adjust = 0 if is_pawn else NON_PAWN_Y_ADJUST
+		var piece_type = piece[1]
+		var y_adjust = 0
+		if piece_type == "P":
+			y_adjust = 0
+		elif piece_type == "K":
+			y_adjust = KING_Y_ADJUST
+		elif piece_type == "Q":
+			y_adjust = QUEEN_Y_ADJUST
+		else:
+			y_adjust = NON_PAWN_Y_ADJUST
 		sprite.position = base_pos + Vector2(0, y_adjust + HOVER_LIFT)
 
 func _reset_piece_position(pos: Vector2i):
@@ -316,8 +334,16 @@ func _reset_piece_position(pos: Vector2i):
 		var base_pos = board_to_screen(pos)
 		var piece = board[pos.y][pos.x]
 		if piece != "":
-			var is_pawn = piece[1] == "P"
-			var y_adjust = 0 if is_pawn else NON_PAWN_Y_ADJUST
+			var piece_type = piece[1]
+			var y_adjust = 0
+			if piece_type == "P":
+				y_adjust = 0
+			elif piece_type == "K":
+				y_adjust = KING_Y_ADJUST
+			elif piece_type == "Q":
+				y_adjust = QUEEN_Y_ADJUST
+			else:
+				y_adjust = NON_PAWN_Y_ADJUST
 			sprite.position = base_pos + Vector2(0, y_adjust)
 
 func update_drag_physics(_delta: float):
