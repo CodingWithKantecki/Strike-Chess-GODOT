@@ -1,22 +1,50 @@
-[gd_scene load_steps=6 format=3 uid="uid://game_scene"]
+[gd_scene load_steps=10 format=3 uid="uid://game_scene"]
 
 [ext_resource type="Script" path="res://scripts/game.gd" id="1_game"]
 [ext_resource type="Script" path="res://scripts/chess_board.gd" id="2_board"]
-[ext_resource type="FontFile" uid="uid://font_editundo_game" path="res://assets/fonts/editundo.ttf" id="3_font"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button"]
-bg_color = Color(0.627, 0.627, 0.667, 1.0)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
+[ext_resource type="FontFile" uid="uid://cflvlm6dee163" path="res://assets/fonts/editundo.ttf" id="3_font"]
+[ext_resource type="Texture2D" uid="uid://b3xit63j1f7uw" path="res://assets/pieces/logo.png" id="4_logo"]
+[ext_resource type="Texture2D" path="res://assets/ui/boardborder.png" id="5_border"]
+[ext_resource type="Texture2D" path="res://assets/ui/boardborder_frame_3x.png" id="6_border_frame"]
+[ext_resource type="Texture2D" path="res://assets/ui/board_plain_05.png" id="7_board_texture"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
-bg_color = Color(0.15, 0.15, 0.2, 0.95)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
+bg_color = Color(0.098, 0.11, 0.141, 0.95)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel_burn"]
+bg_color = Color(0.098, 0.11, 0.141, 0.95)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button"]
+bg_color = Color(0.15, 0.15, 0.2, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.5, 0.5, 0.6, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gameover"]
+bg_color = Color(0.1, 0.1, 0.15, 0.98)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 0.84, 0, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
 
 [node name="Game" type="Control"]
 layout_mode = 3
@@ -30,36 +58,225 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0.08, 0.1, 0.12, 1)
+color = Color(0.02, 0.02, 0.05, 1)
+
+[node name="ParallaxContainer" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="BoardTexture" type="TextureRect" parent="."]
+offset_left = 362.0
+offset_top = 110.0
+offset_right = 1082.0
+offset_bottom = 830.0
+texture = ExtResource("7_board_texture")
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
 
 [node name="ChessBoard" type="Node2D" parent="."]
 script = ExtResource("2_board")
 
-[node name="UI" type="CanvasLayer" parent="."]
+[node name="DecorativeBorder" type="NinePatchRect" parent="."]
+offset_left = 357.0
+offset_top = 105.0
+offset_right = 1087.0
+offset_bottom = 835.0
+texture = ExtResource("6_border_frame")
+texture_filter = 1
+patch_margin_left = 93
+patch_margin_top = 93
+patch_margin_right = 93
+patch_margin_bottom = 93
 
-[node name="TopBar" type="HBoxContainer" parent="UI"]
-offset_left = 20.0
-offset_top = 10.0
-offset_right = 1425.0
-offset_bottom = 60.0
+[node name="TopBar" type="HBoxContainer" parent="."]
+offset_left = 362.0
+offset_top = 15.0
+offset_right = 1082.0
+offset_bottom = 95.0
+theme_override_constants/separation = 0
 
-[node name="TurnLabel" type="Label" parent="UI/TopBar"]
+[node name="WhiteStatus" type="Label" parent="TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+theme_override_fonts/font = ExtResource("3_font")
+theme_override_font_sizes/font_size = 28
+text = "WHITE: PLANNING"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="RoundLabel" type="Label" parent="TopBar"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_fonts/font = ExtResource("3_font")
-theme_override_font_sizes/font_size = 36
-text = "White's Turn"
+theme_override_font_sizes/font_size = 32
+text = "ROUND 1"
+horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="BackButton" type="Button" parent="UI/TopBar"]
+[node name="BlackStatus" type="Label" parent="TopBar"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.235, 0.235, 0.235, 1)
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+theme_override_fonts/font = ExtResource("3_font")
+theme_override_font_sizes/font_size = 28
+text = "BLACK: PLANNING"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Timer" type="Label" parent="."]
+offset_left = 620.0
+offset_top = 850.0
+offset_right = 820.0
+offset_bottom = 920.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("3_font")
+theme_override_font_sizes/font_size = 48
+text = "30"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="InstructionLabel" type="Label" parent="."]
+offset_left = 362.0
+offset_top = 885.0
+offset_right = 1082.0
+offset_bottom = 925.0
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_fonts/font = ExtResource("3_font")
+theme_override_font_sizes/font_size = 18
+text = "DRAG TO MOVE - CLICK TO SELECT"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="RightSidebar" type="Control" parent="."]
+offset_left = 1133.0
+offset_top = 110.0
+offset_right = 1413.0
+offset_bottom = 830.0
+
+[node name="NotificationsPanel" type="Panel" parent="RightSidebar"]
+offset_right = 280.0
+offset_bottom = 160.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Header" type="Label" parent="RightSidebar/NotificationsPanel"]
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 270.0
+offset_bottom = 40.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("3_font")
+theme_override_font_sizes/font_size = 20
+text = "NOTIFICATIONS"
+horizontal_alignment = 1
+
+[node name="Content" type="Label" parent="RightSidebar/NotificationsPanel"]
+offset_left = 10.0
+offset_top = 50.0
+offset_right = 270.0
+offset_bottom = 150.0
+theme_override_colors/font_color = Color(0.6, 0.6, 0.7, 1)
+theme_override_fonts/font = ExtResource("3_font")
+theme_override_font_sizes/font_size = 14
+text = "NEXT ASSET: ROUND 5"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="StrikeDeckPanel" type="Panel" parent="RightSidebar"]
+offset_top = 180.0
+offset_right = 280.0
+offset_bottom = 510.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Header" type="Label" parent="RightSidebar/StrikeDeckPanel"]
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 270.0
+offset_bottom = 50.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_fonts/font = ExtResource("3_font")
 theme_override_font_sizes/font_size = 24
-theme_override_styles/normal = SubResource("StyleBoxFlat_button")
-text = "Back to Menu"
+text = "STRIKE DECK"
+horizontal_alignment = 1
 
-[node name="GameOverPanel" type="Panel" parent="UI"]
+[node name="CardContainer" type="HBoxContainer" parent="RightSidebar/StrikeDeckPanel"]
+offset_left = 10.0
+offset_top = 60.0
+offset_right = 270.0
+offset_bottom = 320.0
+alignment = 1
+theme_override_constants/separation = 15
+
+[node name="CardCount" type="Label" parent="RightSidebar/StrikeDeckPanel"]
+offset_left = 10.0
+offset_top = 300.0
+offset_right = 270.0
+offset_bottom = 325.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("3_font")
+theme_override_font_sizes/font_size = 16
+text = "0/2"
+horizontal_alignment = 1
+
+[node name="BurnCardPanel" type="Panel" parent="RightSidebar"]
+offset_top = 530.0
+offset_right = 280.0
+offset_bottom = 720.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel_burn")
+
+[node name="Header" type="Label" parent="RightSidebar/BurnCardPanel"]
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 270.0
+offset_bottom = 40.0
+theme_override_colors/font_color = Color(1, 0.78, 0.31, 1)
+theme_override_fonts/font = ExtResource("3_font")
+theme_override_font_sizes/font_size = 20
+text = "BURN CARD"
+horizontal_alignment = 1
+
+[node name="FireEffect" type="ColorRect" parent="RightSidebar/BurnCardPanel"]
+offset_left = 20.0
+offset_top = 45.0
+offset_right = 260.0
+offset_bottom = 180.0
+color = Color(0.2, 0.08, 0.02, 1)
+
+[node name="LeftPanel" type="Control" parent="."]
+offset_left = 20.0
+offset_top = 110.0
+offset_right = 320.0
+offset_bottom = 830.0
+
+[node name="BackButton" type="Button" parent="LeftPanel"]
+offset_right = 120.0
+offset_bottom = 40.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("3_font")
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxFlat_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_button")
+text = "< BACK"
+
+[node name="CountdownLabel" type="Label" parent="."]
+visible = false
+offset_left = 500.0
+offset_top = 350.0
+offset_right = 950.0
+offset_bottom = 550.0
+theme_override_colors/font_color = Color(1, 0.9, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_font")
+theme_override_font_sizes/font_size = 180
+text = "3"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="GameOverPanel" type="Panel" parent="."]
 visible = false
 anchors_preset = 8
 anchor_left = 0.5
@@ -67,46 +284,62 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -200.0
-offset_top = -120.0
+offset_top = -150.0
 offset_right = 200.0
-offset_bottom = 120.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+offset_bottom = 150.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_gameover")
 
-[node name="VBox" type="VBoxContainer" parent="UI/GameOverPanel"]
+[node name="VBox" type="VBoxContainer" parent="GameOverPanel"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 20.0
-offset_top = 20.0
+offset_top = 30.0
 offset_right = -20.0
 offset_bottom = -20.0
-theme_override_constants/separation = 15
+theme_override_constants/separation = 20
 
-[node name="WinnerLabel" type="Label" parent="UI/GameOverPanel/VBox"]
+[node name="WinnerLabel" type="Label" parent="GameOverPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+theme_override_fonts/font = ExtResource("3_font")
+theme_override_font_sizes/font_size = 42
+text = "WHITE WINS!"
+horizontal_alignment = 1
+
+[node name="Spacer" type="Control" parent="GameOverPanel/VBox"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="PlayAgainButton" type="Button" parent="GameOverPanel/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_fonts/font = ExtResource("3_font")
-theme_override_font_sizes/font_size = 36
-text = "White Wins!"
-horizontal_alignment = 1
-
-[node name="PlayAgainButton" type="Button" parent="UI/GameOverPanel/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.235, 0.235, 0.235, 1)
-theme_override_fonts/font = ExtResource("3_font")
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("StyleBoxFlat_button")
-text = "Play Again"
+theme_override_styles/hover = SubResource("StyleBoxFlat_button")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_button")
+text = "PLAY AGAIN"
 
-[node name="MenuButton" type="Button" parent="UI/GameOverPanel/VBox"]
+[node name="MenuButton" type="Button" parent="GameOverPanel/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.235, 0.235, 0.235, 1)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_fonts/font = ExtResource("3_font")
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("StyleBoxFlat_button")
-text = "Main Menu"
+theme_override_styles/hover = SubResource("StyleBoxFlat_button")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_button")
+text = "MAIN MENU"
 
-[connection signal="pressed" from="UI/TopBar/BackButton" to="." method="_on_back_button_pressed"]
-[connection signal="pressed" from="UI/GameOverPanel/VBox/PlayAgainButton" to="." method="_on_play_again_pressed"]
-[connection signal="pressed" from="UI/GameOverPanel/VBox/MenuButton" to="." method="_on_menu_button_pressed"]
+[node name="FadeOverlay" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[connection signal="pressed" from="LeftPanel/BackButton" to="." method="_on_back_button_pressed"]
+[connection signal="pressed" from="GameOverPanel/VBox/PlayAgainButton" to="." method="_on_play_again_pressed"]
+[connection signal="pressed" from="GameOverPanel/VBox/MenuButton" to="." method="_on_menu_button_pressed"]

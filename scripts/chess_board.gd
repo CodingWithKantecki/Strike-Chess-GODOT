@@ -14,15 +14,22 @@ signal move_locked(color: String)
 signal countdown_tick(number: int)
 signal moves_resolved
 signal collision_occurred(pos: Vector2i, type: String)
+signal border_hit()  # Emitted when dragging piece hits board edge
 
 # SimuFire Phases (matching pygame board.py lines 25-31)
 enum SimuFirePhase { PLANNING, COUNTDOWN, RESOLUTION, VICTORY, END }
 
-# Board configuration
+# Board configuration - matches pygame exactly
 const BOARD_SIZE = 8
-const SQUARE_SIZE = 81
-const BOARD_OFFSET = Vector2(362, 110)
-const PIECE_SCALE = 3.0
+const SQUARE_SIZE = 81  # Square size in pixels (648 / 8)
+const BOARD_OFFSET = Vector2(398, 146)  # Top-left of playable area (362+36, 110+36)
+# Pawns use larger scale, other pieces 15% smaller
+const PAWN_SCALE = 3.5
+const PIECE_SCALE = 2.975  # 15% smaller than pawns (3.5 * 0.85)
+const QUEEN_SCALE = 2.826  # 5% smaller than other pieces (2.975 * 0.95)
+const KING_SCALE = 2.7132  # 9% smaller than other pieces (2.856 * 0.95)
+const PIECE_Y_OFFSET = -18  # Move pawns up to center them visually in squares
+const NON_PAWN_Y_ADJUST = 5  # Move non-pawns down 5 pixels relative to pawns
 
 # Colors
 const LIGHT_SQUARE = Color(0.941, 0.851, 0.710)
@@ -85,11 +92,59 @@ var castling_rights: Dictionary = {
 	"black_king": true, "black_queen": true
 }
 
+# Drag and drop state with physics
+var is_dragging: bool = false
+var drag_piece_pos: Vector2i = Vector2i(-1, -1)  # Board position of dragged piece
+var drag_sprite: Sprite2D = null  # The sprite being dragged
+var drag_target_pos: Vector2 = Vector2.ZERO  # Where the mouse is (target for physics)
+var drag_current_pos: Vector2 = Vector2.ZERO  # Current visual position (lags behind)
+var drag_original_pos: Vector2 = Vector2.ZERO  # Original screen position to return to
+var drag_color: String = ""  # Color of the piece being dragged
+
+# Physics constants for drag feel
+const DRAG_SMOOTHING = 0.10  # How quickly piece follows mouse (0-1, lower = more lag)
+const DRAG_LIFT_SCALE = 1.15  # Scale up piece slightly when lifted
+
+# Board boundaries for drag constraint
+# Board texture is at (362, 110) with size 720x720
+const DRAG_BOARD_LEFT = 388.0    # Left edge
+const DRAG_BOARD_TOP = 100.0     # Top edge
+const DRAG_BOARD_RIGHT = 1057.0  # Right edge
+const DRAG_BOARD_BOTTOM = 782.0  # Bottom edge
+
+# Border hit tracking
+var last_hit_borders: Array = []  # Which borders were hit last frame
+var border_hit_sound: AudioStreamPlayer
+
+# Hover state
+var hovered_square: Vector2i = Vector2i(-1, -1)  # Currently hovered square
+var last_hover_sound_square: Vector2i = Vector2i(-1, -1)  # Last square that played hover sound
+var hover_sound: AudioStreamPlayer
+const HOVER_LIFT = -10.0  # Pixels to lift piece when hovered (matches pygame)
+
 func _ready():
 	load_piece_textures()
 	initialize_board()
 	create_piece_sprites()
+	setup_border_hit_sound()
 	start_new_round()
+
+func setup_border_hit_sound():
+	"""Setup the border hit sound player."""
+	border_hit_sound = AudioStreamPlayer.new()
+	add_child(border_hit_sound)
+	var sound = load("res://assets/sounds/borderhit.wav")
+	if sound:
+		border_hit_sound.stream = sound
+		border_hit_sound.volume_db = -16  # Quieter (0.15 volume ~ -16db)
+
+	# Setup hover sound
+	hover_sound = AudioStreamPlayer.new()
+	add_child(hover_sound)
+	var hover_snd = load("res://assets/sounds/hoverclick.wav")
+	if hover_snd:
+		hover_sound.stream = hover_snd
+		hover_sound.volume_db = -6  # 0.5 volume ~ -6db
 
 func load_piece_textures():
 	var pieces = {
@@ -132,15 +187,30 @@ func create_sprite_at(pos: Vector2i, piece: String):
 		return
 	var sprite = Sprite2D.new()
 	sprite.texture = piece_textures[piece]
-	sprite.position = board_to_screen(pos)
-	sprite.scale = Vector2(PIECE_SCALE, PIECE_SCALE)
+	sprite.centered = true  # Ensure sprite is centered at position
+	var base_pos = board_to_screen(pos)
+	# Determine scale based on piece type
+	var piece_type = piece[1]
+	var scale: float
+	if piece_type == "P":
+		scale = PAWN_SCALE
+	elif piece_type == "Q":
+		scale = QUEEN_SCALE
+	elif piece_type == "K":
+		scale = KING_SCALE
+	else:
+		scale = PIECE_SCALE
+	# Non-pawns are positioned 5px lower
+	var y_adjust = 0 if piece_type == "P" else NON_PAWN_Y_ADJUST
+	sprite.position = base_pos + Vector2(0, y_adjust)
+	sprite.scale = Vector2(scale, scale)
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	add_child(sprite)
 	piece_sprites[pos] = sprite
 
 func board_to_screen(pos: Vector2i) -> Vector2:
 	return BOARD_OFFSET + Vector2(pos.x * SQUARE_SIZE + SQUARE_SIZE/2,
-								   pos.y * SQUARE_SIZE + SQUARE_SIZE/2)
+								   pos.y * SQUARE_SIZE + SQUARE_SIZE/2 + PIECE_Y_OFFSET)
 
 func screen_to_board(screen_pos: Vector2) -> Vector2i:
 	var local_pos = screen_pos - BOARD_OFFSET
@@ -176,7 +246,121 @@ func _process(delta):
 	if current_phase == SimuFirePhase.RESOLUTION:
 		update_animation(delta)
 
+	# Update drag physics
+	if is_dragging and drag_sprite:
+		update_drag_physics(delta)
+
+	# Update hover state (only during planning, not while dragging)
+	if current_phase == SimuFirePhase.PLANNING and not is_dragging:
+		update_hover()
+
 	queue_redraw()
+
+func update_hover():
+	"""Update piece hover state - lift and play sound on new hovers."""
+	var mouse_pos = get_global_mouse_position()
+	var new_hover = screen_to_board(mouse_pos)
+
+	# Check if hovering over a valid piece
+	if new_hover != Vector2i(-1, -1):
+		var piece = board[new_hover.y][new_hover.x]
+		if piece != "":
+			# Hovering over a piece
+			if new_hover != hovered_square:
+				# New piece hovered - update position and play sound if different
+				var old_hovered = hovered_square
+				hovered_square = new_hover
+
+				# Reset old hovered piece position
+				if old_hovered != Vector2i(-1, -1) and piece_sprites.has(old_hovered):
+					_reset_piece_position(old_hovered)
+
+				# Lift new hovered piece
+				if piece_sprites.has(new_hover):
+					_lift_piece(new_hover)
+
+				# Play sound if this is a new hover (not the same as last sound)
+				if new_hover != last_hover_sound_square:
+					if hover_sound:
+						hover_sound.play()
+					last_hover_sound_square = new_hover
+		else:
+			# Hovering over empty square
+			_clear_hover()
+	else:
+		# Not on board
+		_clear_hover()
+
+func _clear_hover():
+	"""Clear any current hover state."""
+	if hovered_square != Vector2i(-1, -1):
+		if piece_sprites.has(hovered_square):
+			_reset_piece_position(hovered_square)
+		hovered_square = Vector2i(-1, -1)
+		last_hover_sound_square = Vector2i(-1, -1)
+
+func _lift_piece(pos: Vector2i):
+	"""Lift a piece visually for hover effect."""
+	if piece_sprites.has(pos):
+		var sprite = piece_sprites[pos]
+		var base_pos = board_to_screen(pos)
+		var piece = board[pos.y][pos.x]
+		var is_pawn = piece[1] == "P"
+		var y_adjust = 0 if is_pawn else NON_PAWN_Y_ADJUST
+		sprite.position = base_pos + Vector2(0, y_adjust + HOVER_LIFT)
+
+func _reset_piece_position(pos: Vector2i):
+	"""Reset a piece to its normal position."""
+	if piece_sprites.has(pos):
+		var sprite = piece_sprites[pos]
+		var base_pos = board_to_screen(pos)
+		var piece = board[pos.y][pos.x]
+		if piece != "":
+			var is_pawn = piece[1] == "P"
+			var y_adjust = 0 if is_pawn else NON_PAWN_Y_ADJUST
+			sprite.position = base_pos + Vector2(0, y_adjust)
+
+func update_drag_physics(_delta: float):
+	"""Update dragged piece position with physics-like feel."""
+	# Simple lerp toward target - creates a smooth, weighted feel
+	drag_current_pos = drag_current_pos.lerp(drag_target_pos, DRAG_SMOOTHING)
+
+	# Check which borders we're hitting and constrain position
+	var current_hit_borders: Array = []
+	var constrained_pos = drag_current_pos
+
+	# Check and constrain each border
+	if drag_current_pos.x <= DRAG_BOARD_LEFT:
+		current_hit_borders.append("left")
+		constrained_pos.x = DRAG_BOARD_LEFT
+	if drag_current_pos.x >= DRAG_BOARD_RIGHT:
+		current_hit_borders.append("right")
+		constrained_pos.x = DRAG_BOARD_RIGHT
+	if drag_current_pos.y <= DRAG_BOARD_TOP:
+		current_hit_borders.append("top")
+		constrained_pos.y = DRAG_BOARD_TOP
+	if drag_current_pos.y >= DRAG_BOARD_BOTTOM:
+		current_hit_borders.append("bottom")
+		constrained_pos.y = DRAG_BOARD_BOTTOM
+
+	# Check for NEW border hits (not in previous frame)
+	var new_hits: Array = []
+	for border in current_hit_borders:
+		if border not in last_hit_borders:
+			new_hits.append(border)
+
+	# Trigger effects on new border hits
+	if new_hits.size() > 0:
+		emit_signal("border_hit")  # Let game.gd handle screen shake
+		if border_hit_sound:
+			border_hit_sound.play()
+
+	# Update tracking
+	last_hit_borders = current_hit_borders
+
+	# Apply constrained position
+	drag_current_pos = constrained_pos
+	drag_sprite.position = drag_current_pos
 
 func update_simufire():
 	"""Update SimuFire state machine - matching pygame board.py update_simufire()"""
@@ -423,8 +607,110 @@ func _input(event):
 	if current_phase != SimuFirePhase.PLANNING:
 		return
 
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		handle_click(event.position)
+	# Mouse button events
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			start_drag(event.position)
+		else:
+			end_drag(event.position)
+
+	# Mouse motion while dragging
+	if event is InputEventMouseMotion and is_dragging:
+		# Use global mouse position (works correctly with Node2D in Control)
+		drag_target_pos = get_global_mouse_position()
+
+func start_drag(screen_pos: Vector2):
+	"""Start dragging a piece if clicked on one."""
+	# Clear hover state when starting drag
+	_clear_hover()
+
+	var board_pos = screen_to_board(screen_pos)
+	if board_pos == Vector2i(-1, -1):
+		return
+
+	var piece = board[board_pos.y][board_pos.x]
+	var color = get_piece_color(piece)
+
+	# Check if this is a valid piece to drag
+	var can_drag = false
+	if color == "white" and not white_locked:
+		can_drag = true
+		white_selected = board_pos
+		white_valid_moves = get_valid_moves(board_pos)
+		drag_color = "white"
+	elif color == "black" and not black_locked:
+		can_drag = true
+		black_selected = board_pos
+		black_valid_moves = get_valid_moves(board_pos)
+		drag_color = "black"
+
+	if can_drag and piece_sprites.has(board_pos):
+		is_dragging = true
+		drag_piece_pos = board_pos
+		drag_sprite = piece_sprites[board_pos]
+		drag_original_pos = drag_sprite.position
+		drag_current_pos = drag_sprite.position
+		drag_target_pos = get_global_mouse_position()  # Use mouse position
+
+		# Lift the piece (scale up and bring to front)
+		var base_scale = get_piece_scale(piece)
+		drag_sprite.scale = Vector2(base_scale * DRAG_LIFT_SCALE, base_scale * DRAG_LIFT_SCALE)
+		drag_sprite.z_index = 100
+
+		emit_signal("piece_selected", board_pos)
+		queue_redraw()
+
+func end_drag(screen_pos: Vector2):
+	"""End dragging and try to make a move."""
+	if not is_dragging:
+		return
+
+	var drop_pos = screen_to_board(screen_pos)
+	var move_made = false
+
+	# Check if this is a valid move
+	if drop_pos != Vector2i(-1, -1) and drop_pos != drag_piece_pos:
+		if drag_color == "white" and drop_pos in white_valid_moves:
+			plan_move("white", drag_piece_pos, drop_pos)
+			move_made = true
+		elif drag_color == "black" and drop_pos in black_valid_moves:
+			plan_move("black", drag_piece_pos, drop_pos)
+			move_made = true
+
+	# Return piece to original position if no valid move
+	if not move_made and drag_sprite:
+		# Animate back with physics
+		var tween = create_tween()
+		tween.set_ease(Tween.EASE_OUT)
+		tween.set_trans(Tween.TRANS_ELASTIC)
+		tween.tween_property(drag_sprite, "position", drag_original_pos, 0.3)
+
+	# Reset drag state
+	if drag_sprite:
+		var piece = board[drag_piece_pos.y][drag_piece_pos.x]
+		var base_scale = get_piece_scale(piece)
+		drag_sprite.scale = Vector2(base_scale, base_scale)
+		drag_sprite.z_index = 0
+
+	is_dragging = false
+	drag_sprite = null
+	drag_piece_pos = Vector2i(-1, -1)
+	drag_color = ""
+	last_hit_borders = []  # Reset border tracking
+	queue_redraw()
+
+func get_piece_scale(piece: String) -> float:
+	"""Get the appropriate scale for a piece type."""
+	if piece == "":
+		return PIECE_SCALE
+	var piece_type = piece[1]
+	if piece_type == "P":
+		return PAWN_SCALE
+	elif piece_type == "Q":
+		return QUEEN_SCALE
+	elif piece_type == "K":
+		return KING_SCALE
+	return PIECE_SCALE
 
 func handle_click(screen_pos: Vector2):
 	"""Handle click during planning phase."""
@@ -476,13 +762,8 @@ func handle_click(screen_pos: Vector2):
 # ==================== DRAWING ====================
 
 func _draw():
-	# Draw board squares
-	for row in range(BOARD_SIZE):
-		for col in range(BOARD_SIZE):
-			var color = LIGHT_SQUARE if (row + col) % 2 == 0 else DARK_SQUARE
-			var rect = Rect2(BOARD_OFFSET + Vector2(col * SQUARE_SIZE, row * SQUARE_SIZE),
-							Vector2(SQUARE_SIZE, SQUARE_SIZE))
-			draw_rect(rect, color)
+	# Board squares are drawn by BoardTexture in the scene
+	# Only draw selection highlights and move indicators here
 
 	# During planning, show selections and valid moves
 	if current_phase == SimuFirePhase.PLANNING:

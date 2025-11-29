@@ -257,6 +257,15 @@ func apply_discard_rule():
 	while black_hand.size() > MAX_HAND_SIZE:
 		black_hand.pop_back()
 
+func get_next_distribution_round(current_round: int) -> int:
+	"""Get the next round when assets will be distributed."""
+	# Assets distributed on rounds 3, 6, 9, 12, 15, 18, 21...
+	if current_round < 3:
+		return 3
+	# Find next multiple of 3
+	var next_round = ((current_round / 3) + 1) * 3
+	return next_round
+
 func reset():
 	"""Reset all asset state."""
 	white_hand.clear()
