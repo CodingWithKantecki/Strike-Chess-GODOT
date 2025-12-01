@@ -1,7 +1,6 @@
 extends Control
 
-# Main Menu - Exact replica of pygame version
-# City parallax background with falling chess pieces
+# Main Menu - Soft falling chess pieces background
 
 @onready var parallax_bg: ParallaxBackground = $ParallaxBackground
 @onready var falling_pieces_container: Node2D = $FallingPieces
@@ -16,22 +15,26 @@ var piece_textures: Dictionary = {}
 var white_pieces = ["W_Pawn", "W_Knight", "W_Bishop", "W_Rook", "W_Queen", "W_King"]
 var black_pieces = ["B_Pawn", "B_Knight", "B_Bishop", "B_Rook", "B_Queen", "B_King"]
 
-# Falling pieces data
+# Falling pieces
 var falling_pieces: Array = []
-var NUM_COLS = 6
-var NUM_ROWS = 4
+var NUM_COLUMNS: int = 6  # Number of columns for pieces to fall in
 
-# Parallax scroll speed (matching pygame)
+# Settings
+const PIECE_SCALE: float = 12.0
+const FALL_SPEED: float = 45.0  # Consistent speed
+const ROTATION_SPEED_MAX: float = 0.08
+const MIN_PIECE_DISTANCE: float = 180.0  # Minimum distance between pieces
+
+# Parallax scroll speed
 var parallax_offset: float = 0.0
 var PARALLAX_SPEED: float = 0.5
 
 func _ready():
-	# Start with black fade overlay
 	if fade_overlay:
 		fade_overlay.color = Color(0, 0, 0, 1)
 
 	load_piece_textures()
-	initialize_falling_pieces()
+	call_deferred("initialize_falling_pieces")
 
 func load_piece_textures():
 	for piece_name in white_pieces + black_pieces:
@@ -42,81 +45,116 @@ func load_piece_textures():
 
 func initialize_falling_pieces():
 	var screen_size = get_viewport_rect().size
-	var col_spacing = (screen_size.x - 200) / (NUM_COLS - 1)
-	var row_spacing = (screen_size.y + 400) / NUM_ROWS
+	if screen_size.x <= 0 or screen_size.y <= 0:
+		screen_size = Vector2(1445, 940)
 
-	for row in range(NUM_ROWS):
-		for col in range(NUM_COLS):
-			# Create sprite for this piece
-			var sprite = Sprite2D.new()
-			falling_pieces_container.add_child(sprite)
+	var col_width = screen_size.x / NUM_COLUMNS
+	var pieces_per_col = 2
+	var vertical_spacing = (screen_size.y + 400) / pieces_per_col
 
-			# Choose piece type (alternating colors)
-			var piece_pool = white_pieces if (row + col) % 2 == 0 else black_pieces
+	# Create pieces evenly spaced in columns
+	for col in range(NUM_COLUMNS):
+		for i in range(pieces_per_col):
+			var piece_pool = white_pieces if (col + i) % 2 == 0 else black_pieces
 			var piece_name = piece_pool[randi() % piece_pool.size()]
 
+			var sprite = Sprite2D.new()
 			if piece_textures.has(piece_name):
 				sprite.texture = piece_textures[piece_name]
-
-			# Scale the piece up (8x for big falling pieces like pygame)
-			sprite.scale = Vector2(8.0, 8.0)
-
-			# Use nearest neighbor filtering for crisp pixel art
+			sprite.scale = Vector2(PIECE_SCALE, PIECE_SCALE)
 			sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
-			# Calculate position
-			var x_pos = 100 + col * col_spacing + randf_range(-30, 30)
-			x_pos = clamp(x_pos, 100, screen_size.x - 100)
-			var y_base = -300 + row * row_spacing
-			var y_pos = y_base + randf_range(-150, 150)
+			# Center in column with small random offset
+			var x_pos = col_width * (col + 0.5) + randf_range(-20, 20)
+
+			# Evenly space vertically with offset so columns aren't aligned
+			var col_offset = (col % 2) * (vertical_spacing * 0.5)
+			var y_pos = -200 + (i * vertical_spacing) + col_offset + randf_range(-30, 30)
 
 			sprite.position = Vector2(x_pos, y_pos)
+			sprite.rotation = randf_range(-0.3, 0.3)
 
-			# Store piece data (matching pygame parameters)
+			falling_pieces_container.add_child(sprite)
+
 			falling_pieces.append({
 				"sprite": sprite,
-				"column_x": 100 + col * col_spacing,
-				"vy": randf_range(0.45, 0.55),  # Matching pygame speed
-				"rotation_speed": randf_range(-0.3, 0.3),  # Matching pygame rotation
-				"piece_name": piece_name,
-				"is_white": (row + col) % 2 == 0
+				"column": col,
+				"vy": FALL_SPEED,  # Same speed for all - consistent rain
+				"rotation_speed": randf_range(-ROTATION_SPEED_MAX, ROTATION_SPEED_MAX),
+				"is_white": (col + i) % 2 == 0
 			})
 
 func _process(delta):
-	# Scene fade in from black
+	# Scene fade in
 	if fade_overlay and scene_fade_elapsed < scene_fade_duration:
 		scene_fade_elapsed += delta
-		var progress = min(scene_fade_elapsed / scene_fade_duration, 1.0)
-		fade_overlay.color.a = 1.0 - progress
+		fade_overlay.color.a = 1.0 - min(scene_fade_elapsed / scene_fade_duration, 1.0)
 
-	# Update parallax scroll
+	# Parallax scroll
 	parallax_offset += PARALLAX_SPEED
 	if parallax_bg:
 		parallax_bg.scroll_offset.x = -parallax_offset
 
-	# Update falling pieces
 	var screen_size = get_viewport_rect().size
+	var col_width = screen_size.x / NUM_COLUMNS
 
-	for piece_data in falling_pieces:
-		var sprite: Sprite2D = piece_data["sprite"]
+	# Prevent pieces from overlapping - push apart if too close
+	for i in range(falling_pieces.size()):
+		var piece_a = falling_pieces[i]
+		var sprite_a: Sprite2D = piece_a["sprite"]
 
-		# Move down (matching pygame speed)
-		sprite.position.y += piece_data["vy"] * 60 * delta
+		for j in range(i + 1, falling_pieces.size()):
+			var piece_b = falling_pieces[j]
+			var sprite_b: Sprite2D = piece_b["sprite"]
 
-		# Rotate smoothly
-		sprite.rotation += piece_data["rotation_speed"] * delta
+			var diff = sprite_b.position - sprite_a.position
+			var dist = diff.length()
 
-		# Reset when off screen
+			if dist < MIN_PIECE_DISTANCE and dist > 0:
+				# Push apart - mostly vertically
+				var push = (MIN_PIECE_DISTANCE - dist) * 0.5
+				var push_dir = diff.normalized()
+				sprite_a.position -= push_dir * push
+				sprite_b.position += push_dir * push
+
+	# Update each piece
+	for piece in falling_pieces:
+		var sprite: Sprite2D = piece["sprite"]
+
+		# Fall down at constant speed
+		sprite.position.y += piece["vy"] * delta
+
+		# Rotate slowly
+		sprite.rotation += piece["rotation_speed"] * delta
+
+		# Keep in column bounds
+		var col = piece["column"]
+		var col_center = col_width * (col + 0.5)
+		var col_min = col_center - col_width * 0.4
+		var col_max = col_center + col_width * 0.4
+		sprite.position.x = clamp(sprite.position.x, col_min, col_max)
+
+		# Recycle when off bottom
 		if sprite.position.y > screen_size.y + 150:
-			sprite.position.x = piece_data["column_x"] + randf_range(-30, 30)
-			sprite.position.y = randf_range(-400, -150)
-			piece_data["vy"] = randf_range(0.45, 0.55)
+			recycle_piece(piece, screen_size, col_width)
 
-			# Randomly change piece type (same color)
-			var piece_pool = white_pieces if piece_data["is_white"] else black_pieces
-			var new_piece = piece_pool[randi() % piece_pool.size()]
-			if piece_textures.has(new_piece):
-				sprite.texture = piece_textures[new_piece]
+func recycle_piece(piece: Dictionary, screen_size: Vector2, col_width: float):
+	var sprite: Sprite2D = piece["sprite"]
+	var col = piece["column"]
+
+	# Reset well above screen in its column
+	sprite.position.x = col_width * (col + 0.5) + randf_range(-20, 20)
+	sprite.position.y = randf_range(-300, -150)
+	sprite.rotation = randf_range(-0.3, 0.3)
+
+	piece["vy"] = FALL_SPEED  # Same speed - consistent rain
+	piece["rotation_speed"] = randf_range(-ROTATION_SPEED_MAX, ROTATION_SPEED_MAX)
+
+	# Change piece type
+	var piece_pool = white_pieces if piece["is_white"] else black_pieces
+	var new_piece = piece_pool[randi() % piece_pool.size()]
+	if piece_textures.has(new_piece):
+		sprite.texture = piece_textures[new_piece]
 
 # Button handlers matching pygame menu
 func _on_play_pressed():
