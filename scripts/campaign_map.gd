@@ -29,10 +29,10 @@ var scene_fade_duration: float = 0.5
 var scene_fade_elapsed: float = 0.0
 
 # Map dimensions - matching pygame
-var border_width: int = 260  # Match left panel width
-var map_width: int = 985
+var border_width: int = 220  # Match panel width (both panels equal)
+var map_width: int = 1005
 var map_height: int = 4700
-var map_offset_x: int = 260
+var map_offset_x: int = 220
 
 # Scrolling
 var scroll_y: float = 0.0
@@ -114,10 +114,9 @@ func _ready():
 		fade_overlay.color = Color(0, 0, 0, 1)
 
 	var viewport_size = get_viewport_rect().size
-	var left_panel_width = 260
-	var right_panel_width = 200
-	map_width = int(viewport_size.x) - left_panel_width - right_panel_width
-	map_offset_x = left_panel_width
+	var panel_width = 220  # Both panels are equal width
+	map_width = int(viewport_size.x) - (panel_width * 2)
+	map_offset_x = panel_width
 
 	load_map_images()
 	load_walkable_path()
