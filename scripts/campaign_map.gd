@@ -115,8 +115,9 @@ func _ready():
 
 	var viewport_size = get_viewport_rect().size
 	var panel_width = 220  # Both panels are equal width
-	map_width = int(viewport_size.x) - (panel_width * 2)
-	map_offset_x = panel_width
+	# Extend map slightly under panels to prevent any gaps
+	map_width = int(viewport_size.x) - (panel_width * 2) + 10
+	map_offset_x = panel_width - 5
 
 	load_map_images()
 	load_walkable_path()
