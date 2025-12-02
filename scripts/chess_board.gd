@@ -107,6 +107,14 @@ var drag_color: String = ""  # Color of the piece being dragged
 # Physics constants for drag feel
 const DRAG_SMOOTHING = 0.10  # How quickly piece follows mouse (0-1, lower = more lag)
 const DRAG_LIFT_SCALE = 1.15  # Scale up piece slightly when lifted
+const DRAG_TILT_MAX = 0.5  # Maximum tilt in radians (~29 degrees)
+const DRAG_TILT_SPEED = 0.015  # How much velocity affects tilt
+const DRAG_TILT_SMOOTHING = 0.15  # How quickly tilt settles back
+
+# Tilt physics state
+var drag_last_x: float = 0.0  # Last x position for velocity calc
+var drag_velocity_x: float = 0.0  # Horizontal velocity
+var drag_current_tilt: float = 0.0  # Current rotation angle
 
 # Board boundaries for drag constraint
 # Board texture is at (362, 110) with size 720x720
@@ -353,6 +361,16 @@ func update_drag_physics(_delta: float):
 	# Simple lerp toward target - creates a smooth, weighted feel
 	drag_current_pos = drag_current_pos.lerp(drag_target_pos, DRAG_SMOOTHING)
 
+	# Calculate horizontal velocity for tilt effect
+	drag_velocity_x = drag_current_pos.x - drag_last_x
+	drag_last_x = drag_current_pos.x
+
+	# Calculate target tilt based on velocity (negative so it tilts opposite to movement direction)
+	var target_tilt = clamp(-drag_velocity_x * DRAG_TILT_SPEED, -DRAG_TILT_MAX, DRAG_TILT_MAX)
+
+	# Smoothly interpolate current tilt toward target
+	drag_current_tilt = lerp(drag_current_tilt, target_tilt, DRAG_TILT_SMOOTHING)
+
 	# Check which borders we're hitting and constrain position
 	var current_hit_borders: Array = []
 	var constrained_pos = drag_current_pos
@@ -386,9 +404,10 @@ func update_drag_physics(_delta: float):
 	# Update tracking
 	last_hit_borders = current_hit_borders
 
-	# Apply constrained position
+	# Apply constrained position and tilt rotation
 	drag_current_pos = constrained_pos
 	drag_sprite.position = drag_current_pos
+	drag_sprite.rotation = drag_current_tilt
 
 func update_simufire():
 	"""Update SimuFire state machine - matching pygame board.py update_simufire()"""
@@ -680,6 +699,11 @@ func start_drag(screen_pos: Vector2):
 		drag_current_pos = drag_sprite.position
 		drag_target_pos = get_global_mouse_position()  # Use mouse position
 
+		# Initialize tilt physics
+		drag_last_x = drag_current_pos.x
+		drag_velocity_x = 0.0
+		drag_current_tilt = 0.0
+
 		# Lift the piece (scale up and bring to front)
 		var base_scale = get_piece_scale(piece)
 		drag_sprite.scale = Vector2(base_scale * DRAG_LIFT_SCALE, base_scale * DRAG_LIFT_SCALE)
@@ -712,6 +736,8 @@ func end_drag(screen_pos: Vector2):
 		tween.set_ease(Tween.EASE_OUT)
 		tween.set_trans(Tween.TRANS_ELASTIC)
 		tween.tween_property(drag_sprite, "position", drag_original_pos, 0.3)
+		# Swing rotation back to 0
+		tween.parallel().tween_property(drag_sprite, "rotation", 0.0, 0.3)
 
 	# Reset drag state
 	if drag_sprite:
@@ -719,6 +745,9 @@ func end_drag(screen_pos: Vector2):
 		var base_scale = get_piece_scale(piece)
 		drag_sprite.scale = Vector2(base_scale, base_scale)
 		drag_sprite.z_index = 0
+		# Reset rotation if move was made (no tween needed)
+		if move_made:
+			drag_sprite.rotation = 0.0
 
 	is_dragging = false
 	drag_sprite = null
