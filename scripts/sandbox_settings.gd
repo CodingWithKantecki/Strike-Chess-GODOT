@@ -8,6 +8,8 @@ extends Control
 @onready var difficulty_label: Label = $CenterContainer/VBox/DifficultyLabel
 @onready var elo_slider: HSlider = $CenterContainer/VBox/SliderContainer/EloSlider
 @onready var slider_fill: ColorRect = $CenterContainer/VBox/SliderContainer/SliderFill
+@onready var knob_outer: ColorRect = $CenterContainer/VBox/SliderContainer/KnobOuter
+@onready var knob_inner: ColorRect = $CenterContainer/VBox/SliderContainer/KnobInner
 @onready var min_label: Label = $CenterContainer/VBox/SliderContainer/MinLabel
 @onready var max_label: Label = $CenterContainer/VBox/SliderContainer/MaxLabel
 @onready var falling_pieces_container: Node2D = $FallingPieces
@@ -210,11 +212,23 @@ func update_display():
 	if elo_label:
 		elo_label.add_theme_color_override("font_color", tier["color"])
 
+	# Calculate fill ratio
+	var fill_ratio = float(current_elo - MIN_ELO) / float(MAX_ELO - MIN_ELO)
+	var slider_width = 600.0
+	var knob_width = 30.0
+
 	# Update slider fill
 	if slider_fill:
-		var fill_ratio = float(current_elo - MIN_ELO) / float(MAX_ELO - MIN_ELO)
-		slider_fill.size.x = fill_ratio * 600  # Slider width
+		slider_fill.size.x = fill_ratio * slider_width
 		slider_fill.color = tier["color"]
+
+	# Update knob position and color
+	var knob_x = fill_ratio * slider_width - (knob_width / 2)
+	if knob_outer:
+		knob_outer.position.x = knob_x
+	if knob_inner:
+		knob_inner.position.x = knob_x + 3
+		knob_inner.color = tier["color"]
 
 func _on_start_pressed():
 	AudioManager.play_click_sound()

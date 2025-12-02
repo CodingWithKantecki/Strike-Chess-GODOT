@@ -100,30 +100,64 @@ custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 
 [node name="SliderContainer" type="Control" parent="CenterContainer/VBox"]
-custom_minimum_size = Vector2(600, 60)
+custom_minimum_size = Vector2(600, 80)
 layout_mode = 2
 
 [node name="SliderTrack" type="ColorRect" parent="CenterContainer/VBox/SliderContainer"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = 20.0
-offset_bottom = -20.0
-color = Color(0.15, 0.15, 0.15, 1)
+layout_mode = 0
+offset_left = 0.0
+offset_top = 25.0
+offset_right = 600.0
+offset_bottom = 55.0
+color = Color(0.235, 0.235, 0.235, 1)
+
+[node name="SliderBorder" type="ColorRect" parent="CenterContainer/VBox/SliderContainer"]
+layout_mode = 0
+offset_left = -2.0
+offset_top = 23.0
+offset_right = 602.0
+offset_bottom = 57.0
+color = Color(0.4, 0.4, 0.43, 1)
+
+[node name="SliderTrackInner" type="ColorRect" parent="CenterContainer/VBox/SliderContainer"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 25.0
+offset_right = 600.0
+offset_bottom = 55.0
+color = Color(0.235, 0.235, 0.235, 1)
 
 [node name="SliderFill" type="ColorRect" parent="CenterContainer/VBox/SliderContainer"]
 layout_mode = 0
-offset_top = 20.0
-offset_right = 170.0
-offset_bottom = 40.0
+offset_left = 0.0
+offset_top = 25.0
+offset_right = 171.0
+offset_bottom = 55.0
+color = Color(0.8, 0.8, 0.2, 1)
+
+[node name="KnobOuter" type="ColorRect" parent="CenterContainer/VBox/SliderContainer"]
+layout_mode = 0
+offset_left = 156.0
+offset_top = 22.0
+offset_right = 186.0
+offset_bottom = 58.0
+color = Color(1, 1, 1, 1)
+
+[node name="KnobInner" type="ColorRect" parent="CenterContainer/VBox/SliderContainer"]
+layout_mode = 0
+offset_left = 159.0
+offset_top = 25.0
+offset_right = 183.0
+offset_bottom = 55.0
 color = Color(0.8, 0.8, 0.2, 1)
 
 [node name="EloSlider" type="HSlider" parent="CenterContainer/VBox/SliderContainer"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+layout_mode = 0
+offset_left = 0.0
+offset_top = 15.0
+offset_right = 600.0
+offset_bottom = 65.0
+modulate = Color(1, 1, 1, 0)
 min_value = 600.0
 max_value = 2000.0
 step = 100.0
@@ -131,9 +165,10 @@ value = 1000.0
 
 [node name="MinLabel" type="Label" parent="CenterContainer/VBox/SliderContainer"]
 layout_mode = 0
-offset_top = 45.0
+offset_left = 0.0
+offset_top = 60.0
 offset_right = 50.0
-offset_bottom = 60.0
+offset_bottom = 80.0
 theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 14
@@ -142,13 +177,14 @@ text = "600"
 [node name="MaxLabel" type="Label" parent="CenterContainer/VBox/SliderContainer"]
 layout_mode = 0
 offset_left = 560.0
-offset_top = 45.0
+offset_top = 60.0
 offset_right = 600.0
-offset_bottom = 60.0
+offset_bottom = 80.0
 theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 14
 text = "2000"
+horizontal_alignment = 2
 
 [node name="Spacer3" type="Control" parent="CenterContainer/VBox"]
 custom_minimum_size = Vector2(0, 40)
