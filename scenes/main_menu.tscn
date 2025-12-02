@@ -158,8 +158,6 @@ position = Vector2(2880, 470)
 scale = Vector2(4, 4)
 texture = ExtResource("9_lights2")
 
-[node name="FallingPieces" type="Node2D" parent="."]
-
 [node name="VHSOverlay" type="VideoStreamPlayer" parent="."]
 layout_mode = 1
 anchors_preset = 15
@@ -173,6 +171,8 @@ stream = ExtResource("1_static_video")
 autoplay = true
 loop = true
 expand = true
+
+[node name="FallingPieces" type="Node2D" parent="."]
 
 [node name="Logo" type="TextureRect" parent="."]
 layout_mode = 1
