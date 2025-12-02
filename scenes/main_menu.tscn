@@ -1,6 +1,7 @@
-[gd_scene load_steps=15 format=3 uid="uid://t6str81kj2jg"]
+[gd_scene load_steps=16 format=3 uid="uid://t6str81kj2jg"]
 
 [ext_resource type="Script" uid="uid://b62v6rmo46xbm" path="res://scripts/main_menu.gd" id="1_menu"]
+[ext_resource type="VideoStream" path="res://assets/vhs_overlay.ogv" id="1_static_video"]
 [ext_resource type="Texture2D" path="res://assets/pieces/Layer_0011_0.png" id="2_city0"]
 [ext_resource type="Texture2D" path="res://assets/pieces/Layer_0010_1.png" id="3_city1"]
 [ext_resource type="Texture2D" path="res://assets/pieces/Layer_0009_2.png" id="4_city2"]
@@ -158,6 +159,20 @@ scale = Vector2(4, 4)
 texture = ExtResource("9_lights2")
 
 [node name="FallingPieces" type="Node2D" parent="."]
+
+[node name="VHSOverlay" type="VideoStreamPlayer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+modulate = Color(1, 1, 1, 0.15)
+stream = ExtResource("1_static_video")
+autoplay = true
+loop = true
+expand = true
 
 [node name="Logo" type="TextureRect" parent="."]
 layout_mode = 1
