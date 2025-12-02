@@ -113,11 +113,7 @@ func _ready():
 	if fade_overlay:
 		fade_overlay.color = Color(0, 0, 0, 1)
 
-	var viewport_size = get_viewport_rect().size
-	var panel_width = 220  # Both panels are equal width
-	# Extend map slightly under panels to prevent any gaps
-	map_width = int(viewport_size.x) - (panel_width * 2) + 10
-	map_offset_x = panel_width - 5
+	update_map_dimensions()
 
 	load_map_images()
 	load_walkable_path()
@@ -131,6 +127,52 @@ func _ready():
 		tank_hull.scale = Vector2(1.875, 1.875)
 	if tank_turret:
 		tank_turret.scale = Vector2(1.875, 1.875)
+
+	# Connect to viewport resize
+	get_tree().root.size_changed.connect(_on_viewport_resized)
+
+func update_map_dimensions():
+	var viewport_size = get_viewport_rect().size
+	var panel_width = 220  # Both panels are equal width
+	# Extend map slightly under panels to prevent any gaps
+	map_width = int(viewport_size.x) - (panel_width * 2) + 10
+	map_offset_x = panel_width - 5
+
+func _on_viewport_resized():
+	var old_width = map_width
+	update_map_dimensions()
+
+	# Rescale map sprites if width changed
+	if old_width != map_width and map_container:
+		recreate_map_sprites()
+
+	# Update max scroll for new viewport height
+	max_scroll = max(0, map_height - get_viewport_rect().size.y)
+
+func recreate_map_sprites():
+	if map_textures.size() == 0:
+		return
+
+	# Clear existing sprites
+	for child in map_container.get_children():
+		if child is Sprite2D:
+			child.queue_free()
+
+	# Recalculate total height based on new width
+	var total_height: float = 0.0
+	zone_boundaries.clear()
+	for i in range(map_textures.size()):
+		var scale_factor = float(map_width) / map_textures[i].get_width()
+		var scaled_height = map_textures[i].get_height() * scale_factor
+		total_height += scaled_height
+		if i < map_textures.size() - 1:
+			zone_boundaries.append({"y": total_height, "zone_above": i + 1, "zone_below": i + 2})
+	map_height = int(total_height)
+	max_scroll = max(0, map_height - get_viewport_rect().size.y)
+
+	# Recreate with new dimensions
+	await get_tree().process_frame
+	create_map_sprites()
 
 func load_map_images():
 	var image_names = [

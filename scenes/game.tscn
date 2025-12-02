@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://game_scene"]
+[gd_scene load_steps=14 format=3 uid="uid://game_scene"]
 
 [ext_resource type="Script" path="res://scripts/game.gd" id="1_game"]
 [ext_resource type="Script" path="res://scripts/chess_board.gd" id="2_board"]
@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/board_plain_05.png" id="7_board_texture"]
 [ext_resource type="Texture2D" path="res://assets/pieces/buttonborder.png" id="8_buttonborder"]
 [ext_resource type="Script" path="res://scripts/fire_effect.gd" id="9_fire_effect"]
+[ext_resource type="Script" path="res://scripts/tension_overlay.gd" id="10_tension"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_normal"]
 bg_color = Color(0.627, 0.627, 0.667, 1)
@@ -26,17 +27,27 @@ corner_radius_bottom_left = 0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 bg_color = Color(0.098, 0.11, 0.141, 0.95)
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.6, 0.6, 0.65, 1)
+corner_radius_top_left = 0
+corner_radius_top_right = 0
+corner_radius_bottom_right = 0
+corner_radius_bottom_left = 0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel_burn"]
 bg_color = Color(0.098, 0.11, 0.141, 0.95)
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.6, 0.6, 0.65, 1)
+corner_radius_top_left = 0
+corner_radius_top_right = 0
+corner_radius_bottom_right = 0
+corner_radius_bottom_left = 0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button"]
 bg_color = Color(0.15, 0.15, 0.2, 1)
@@ -145,10 +156,10 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Timer" type="Label" parent="."]
-offset_left = 620.0
+offset_left = 362.0
 offset_top = 850.0
-offset_right = 820.0
-offset_bottom = 920.0
+offset_right = 1082.0
+offset_bottom = 910.0
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_fonts/font = ExtResource("3_font")
 theme_override_font_sizes/font_size = 48
@@ -158,12 +169,12 @@ vertical_alignment = 1
 
 [node name="InstructionLabel" type="Label" parent="."]
 offset_left = 362.0
-offset_top = 885.0
+offset_top = 910.0
 offset_right = 1082.0
-offset_bottom = 925.0
+offset_bottom = 940.0
 theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
 theme_override_fonts/font = ExtResource("3_font")
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 16
 text = "DRAG TO MOVE - CLICK TO SELECT"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -263,10 +274,10 @@ offset_bottom = 185.0
 script = ExtResource("9_fire_effect")
 
 [node name="LeftPanel" type="Control" parent="."]
-offset_left = 20.0
-offset_top = 110.0
-offset_right = 320.0
-offset_bottom = 830.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 308.0
+offset_bottom = 728.0
 
 [node name="BackButtonFrame" type="NinePatchRect" parent="LeftPanel"]
 offset_right = 140.0
@@ -406,6 +417,14 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_button_normal")
 theme_override_styles/focus = SubResource("StyleBoxFlat_button_normal")
 text = "MAIN MENU"
+
+[node name="TensionOverlay" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("10_tension")
 
 [node name="FadeOverlay" type="ColorRect" parent="."]
 layout_mode = 1

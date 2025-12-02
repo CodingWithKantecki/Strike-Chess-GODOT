@@ -15,6 +15,7 @@ extends Control
 @onready var timer_label: Label = $Timer
 @onready var instruction_label: Label = $InstructionLabel
 @onready var countdown_label: Label = $CountdownLabel
+@onready var tension_overlay: Control = $TensionOverlay
 
 # Right sidebar
 @onready var notifications_content: Label = $RightSidebar/NotificationsPanel/Content
@@ -65,6 +66,7 @@ var shake_intensity: float = 0.0
 var shake_duration: float = 0.0
 var shake_start_time: float = 0.0
 var base_position: Vector2 = Vector2.ZERO
+
 
 func _ready():
 	# Start with black fade overlay
@@ -166,20 +168,28 @@ func _on_phase_changed(phase: int):
 	match phase:
 		ChessBoard.SimuFirePhase.PLANNING:
 			countdown_label.visible = false
+			if tension_overlay:
+				tension_overlay.set_countdown_active(false)
 			instruction_label.text = "DRAG TO MOVE - CLICK TO SELECT"
 			_reset_status_labels()
 
 		ChessBoard.SimuFirePhase.COUNTDOWN:
 			countdown_label.visible = true
+			if tension_overlay:
+				tension_overlay.set_countdown_active(true)
 			instruction_label.text = "MOVES LOCKED - EXECUTING IN..."
 
 		ChessBoard.SimuFirePhase.RESOLUTION:
 			countdown_label.visible = false
+			if tension_overlay:
+				tension_overlay.set_countdown_active(false)
 			instruction_label.text = "MOVES EXECUTING..."
 			# Apply asset effects before moves resolve
 			asset_system.apply_pending_effects(chess_board)
 
 		ChessBoard.SimuFirePhase.END:
+			if tension_overlay:
+				tension_overlay.set_countdown_active(false)
 			instruction_label.text = "ROUND COMPLETE"
 			# Check for asset distribution
 			asset_system.check_distribution(chess_board.round_number)

@@ -24,11 +24,11 @@ const BOARD_SIZE = 8
 const SQUARE_SIZE = 81  # Square size in pixels (648 / 8)
 const BOARD_OFFSET = Vector2(398, 146)  # Top-left of playable area (362+36, 110+36)
 # Pawns use larger scale, other pieces 15% smaller
-const PAWN_SCALE = 3.5
+const PAWN_SCALE = 3.85  # 10% larger than before
 const PIECE_SCALE = 2.975  # 15% smaller than pawns (3.5 * 0.85)
 const QUEEN_SCALE = 2.543  # 15% smaller than other pieces
 const KING_SCALE = 2.436  # 18% smaller than other pieces
-const PIECE_Y_OFFSET = -18  # Move pawns up to center them visually in squares
+const PIECE_Y_OFFSET = -25  # Move pawns up to center them visually in squares
 const NON_PAWN_Y_ADJUST = 5  # Move non-pawns down 5 pixels relative to pawns
 const QUEEN_Y_ADJUST = 11  # Queen needs extra 6 pixels down (5 + 6)
 const KING_Y_ADJUST = 13  # King needs extra 8 pixels down (5 + 8)
@@ -73,6 +73,7 @@ var black_valid_moves: Array = []
 # Animation state
 var animating_moves: Array = []  # [{piece, from, to, sprite}]
 var animation_progress: float = 0.0
+var pulse_time: float = 0.0  # For pulsing move highlights
 
 # Collision results
 var collision_results: Array = []  # Store collision info for display
@@ -252,6 +253,7 @@ func start_new_round():
 
 func _process(delta):
 	update_simufire()
+	pulse_time += delta
 
 	if current_phase == SimuFirePhase.RESOLUTION:
 		update_animation(delta)
@@ -800,10 +802,8 @@ func _draw():
 			draw_rect(rect, WHITE_PLAN_COLOR)
 
 			for move in white_valid_moves:
-				var move_rect = Rect2(BOARD_OFFSET + Vector2(move.x * SQUARE_SIZE, move.y * SQUARE_SIZE),
-								Vector2(SQUARE_SIZE, SQUARE_SIZE))
-				var move_color = CAPTURE_COLOR if board[move.y][move.x] != "" else VALID_MOVE_COLOR
-				draw_rect(move_rect, move_color)
+				var is_capture = board[move.y][move.x] != ""
+				draw_pulsing_move_highlight(move, is_capture)
 
 		# Black selection
 		if black_selected != Vector2i(-1, -1) and not black_locked:
@@ -812,10 +812,8 @@ func _draw():
 			draw_rect(rect, BLACK_PLAN_COLOR)
 
 			for move in black_valid_moves:
-				var move_rect = Rect2(BOARD_OFFSET + Vector2(move.x * SQUARE_SIZE, move.y * SQUARE_SIZE),
-								Vector2(SQUARE_SIZE, SQUARE_SIZE))
-				var move_color = CAPTURE_COLOR if board[move.y][move.x] != "" else VALID_MOVE_COLOR
-				draw_rect(move_rect, move_color)
+				var is_capture = board[move.y][move.x] != ""
+				draw_pulsing_move_highlight(move, is_capture)
 
 		# Show locked plans
 		if white_locked and white_plan.size() > 0:
@@ -823,12 +821,17 @@ func _draw():
 		if black_locked and black_plan.size() > 0:
 			_draw_planned_move(black_plan, LOCKED_COLOR)
 
-	# During countdown, show both planned moves with arrows
+	# During countdown, show both planned moves with flashing effect
 	if current_phase == SimuFirePhase.COUNTDOWN:
+		var flash = (sin(pulse_time * 8.0) + 1.0) / 2.0  # Fast flash
 		if white_plan.size() > 0:
 			_draw_move_path(white_plan, Color(0.2, 0.5, 1.0, 0.8))
+			# Flash opponent's move (black) with red warning
+			_draw_flashing_threat(black_plan, flash)
 		if black_plan.size() > 0:
 			_draw_move_path(black_plan, Color(1.0, 0.3, 0.3, 0.8))
+			# Flash opponent's move (white) with blue warning
+			_draw_flashing_threat(white_plan, flash)
 
 func _draw_planned_move(plan: Dictionary, color: Color):
 	"""Draw a planned move indicator."""
@@ -855,6 +858,56 @@ func _draw_move_path(plan: Dictionary, color: Color):
 		var arrow_left = to_pos - dir * arrow_size + perp * arrow_size * 0.5
 		var arrow_right = to_pos - dir * arrow_size - perp * arrow_size * 0.5
 		draw_polygon([arrow_tip, arrow_left, arrow_right], [color])
+
+func _draw_flashing_threat(plan: Dictionary, flash: float):
+	"""Draw flashing warning on opponent's planned move destination."""
+	if not plan.has("to"):
+		return
+
+	var to = plan["to"]
+	var base_pos = BOARD_OFFSET + Vector2(to.x * SQUARE_SIZE, to.y * SQUARE_SIZE)
+
+	# Flashing red/orange warning
+	var warning_color = Color(1.0, 0.2, 0.1, flash * 0.5)
+	var rect = Rect2(base_pos, Vector2(SQUARE_SIZE, SQUARE_SIZE))
+	draw_rect(rect, warning_color)
+
+	# Pulsing border
+	var border_alpha = 0.6 + flash * 0.4
+	var border_color = Color(1.0, 0.3, 0.0, border_alpha)
+	var border_width = 4.0
+	# Top
+	draw_rect(Rect2(base_pos, Vector2(SQUARE_SIZE, border_width)), border_color)
+	# Bottom
+	draw_rect(Rect2(base_pos + Vector2(0, SQUARE_SIZE - border_width), Vector2(SQUARE_SIZE, border_width)), border_color)
+	# Left
+	draw_rect(Rect2(base_pos, Vector2(border_width, SQUARE_SIZE)), border_color)
+	# Right
+	draw_rect(Rect2(base_pos + Vector2(SQUARE_SIZE - border_width, 0), Vector2(border_width, SQUARE_SIZE)), border_color)
+
+func draw_pulsing_move_highlight(move: Vector2i, _is_capture: bool):
+	"""Draw 8-bit style single pulsing dot in center of square."""
+	var base_pos = BOARD_OFFSET + Vector2(move.x * SQUARE_SIZE, move.y * SQUARE_SIZE)
+	var center = base_pos + Vector2(SQUARE_SIZE / 2, SQUARE_SIZE / 2)
+
+	# Pulse parameters
+	var pulse_speed = 4.0
+	var pulse = (sin(pulse_time * pulse_speed) + 1.0) / 2.0  # 0 to 1
+
+	# Pulsing size
+	var dot_size = 16 + pulse * 8  # Pulses between 16 and 24
+	var border_size = dot_size + 6
+
+	# Colors
+	var border_alpha = 0.6 + pulse * 0.3
+	var dot_alpha = 0.7 + pulse * 0.25
+	var border_color = Color(0.75, 0.75, 0.75, border_alpha)  # Light grey border
+	var dot_color = Color(0.3, 0.3, 0.3, dot_alpha)  # Dark grey dot
+
+	# Draw light grey border
+	draw_rect(Rect2(center - Vector2(border_size/2, border_size/2), Vector2(border_size, border_size)), border_color)
+	# Draw dark grey center dot
+	draw_rect(Rect2(center - Vector2(dot_size/2, dot_size/2), Vector2(dot_size, dot_size)), dot_color)
 
 # ==================== CHESS LOGIC ====================
 
