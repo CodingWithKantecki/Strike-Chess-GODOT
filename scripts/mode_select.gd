@@ -28,6 +28,15 @@ var title_glitch_timer: float = 0.0
 var title_glitch_duration: float = 1.2
 var original_title: String = "CHOOSE YOUR BATTLE"
 
+# Description glitch effect
+var desc_glitch_active: bool = false
+var desc_glitch_timer: float = 0.0
+var desc_glitch_duration: float = 1.2
+var target_mode_name: String = ""
+var target_subtitle: String = ""
+var target_description: String = ""
+var target_features: String = ""
+
 # Currently selected mode
 var selected_mode: String = "campaign"
 
@@ -36,8 +45,13 @@ var piece_textures: Dictionary = {}
 var white_pieces = ["W_Pawn", "W_Knight", "W_Bishop", "W_Rook", "W_Queen", "W_King"]
 var black_pieces = ["B_Pawn", "B_Knight", "B_Bishop", "B_Rook", "B_Queen", "B_King"]
 var falling_pieces: Array = []
-var NUM_COLS = 6
-var NUM_ROWS = 4
+var NUM_COLUMNS: int = 6
+
+# Falling piece settings (same as main menu)
+const PIECE_SCALE: float = 12.0
+const FALL_SPEED: float = 45.0
+const ROTATION_SPEED_MAX: float = 0.08
+const MIN_PIECE_DISTANCE: float = 180.0
 
 # Mode data
 var mode_data = {
@@ -110,37 +124,43 @@ func load_piece_textures():
 
 func initialize_falling_pieces():
 	var screen_size = get_viewport_rect().size
-	var col_spacing = (screen_size.x - 200) / (NUM_COLS - 1)
-	var row_spacing = (screen_size.y + 400) / NUM_ROWS
+	if screen_size.x <= 0 or screen_size.y <= 0:
+		screen_size = Vector2(1445, 940)
 
-	for row in range(NUM_ROWS):
-		for col in range(NUM_COLS):
-			var sprite = Sprite2D.new()
-			falling_pieces_container.add_child(sprite)
+	var col_width = screen_size.x / NUM_COLUMNS
+	var pieces_per_col = 2
+	var vertical_spacing = (screen_size.y + 400) / pieces_per_col
 
-			var piece_pool = white_pieces if (row + col) % 2 == 0 else black_pieces
+	# Create pieces evenly spaced in columns
+	for col in range(NUM_COLUMNS):
+		for i in range(pieces_per_col):
+			var piece_pool = white_pieces if (col + i) % 2 == 0 else black_pieces
 			var piece_name = piece_pool[randi() % piece_pool.size()]
 
+			var sprite = Sprite2D.new()
 			if piece_textures.has(piece_name):
 				sprite.texture = piece_textures[piece_name]
-
-			sprite.scale = Vector2(8.0, 8.0)
+			sprite.scale = Vector2(PIECE_SCALE, PIECE_SCALE)
 			sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
-			var x_pos = 100 + col * col_spacing + randf_range(-30, 30)
-			x_pos = clamp(x_pos, 100, screen_size.x - 100)
-			var y_base = -300 + row * row_spacing
-			var y_pos = y_base + randf_range(-150, 150)
+			# Center in column with small random offset
+			var x_pos = col_width * (col + 0.5) + randf_range(-20, 20)
+
+			# Evenly space vertically with offset so columns aren't aligned
+			var col_offset = (col % 2) * (vertical_spacing * 0.5)
+			var y_pos = -200 + (i * vertical_spacing) + col_offset + randf_range(-30, 30)
 
 			sprite.position = Vector2(x_pos, y_pos)
+			sprite.rotation = randf_range(-0.3, 0.3)
+
+			falling_pieces_container.add_child(sprite)
 
 			falling_pieces.append({
 				"sprite": sprite,
-				"column_x": 100 + col * col_spacing,
-				"vy": randf_range(0.45, 0.55),
-				"rotation_speed": randf_range(-0.3, 0.3),
-				"piece_name": piece_name,
-				"is_white": (row + col) % 2 == 0
+				"column": col,
+				"vy": FALL_SPEED,
+				"rotation_speed": randf_range(-ROTATION_SPEED_MAX, ROTATION_SPEED_MAX),
+				"is_white": (col + i) % 2 == 0
 			})
 
 func _process(delta):
@@ -154,56 +174,125 @@ func _process(delta):
 	if title_glitch_active:
 		title_glitch_timer += delta
 		var progress = min(title_glitch_timer / title_glitch_duration, 1.0)
-		title.text = scramble_title(original_title, progress)
+		title.text = scramble_text(original_title, progress)
 
 		if progress >= 1.0:
 			title_glitch_active = false
 			title.text = original_title
 
+	# Description glitch effect
+	if desc_glitch_active:
+		desc_glitch_timer += delta
+		var progress = min(desc_glitch_timer / desc_glitch_duration, 1.0)
+
+		mode_name_label.text = scramble_text(target_mode_name, progress)
+		mode_subtitle_label.text = scramble_text(target_subtitle, progress)
+		description_label.text = scramble_text(target_description, progress)
+		features_label.text = scramble_text(target_features, progress)
+
+		if progress >= 1.0:
+			desc_glitch_active = false
+			mode_name_label.text = target_mode_name
+			mode_subtitle_label.text = target_subtitle
+			description_label.text = target_description
+			features_label.text = target_features
+
 	# Update falling pieces
 	var screen_size = get_viewport_rect().size
-	for piece_data in falling_pieces:
-		var sprite: Sprite2D = piece_data["sprite"]
-		sprite.position.y += piece_data["vy"] * 60 * delta
-		sprite.rotation += piece_data["rotation_speed"] * delta
+	var col_width = screen_size.x / NUM_COLUMNS
 
+	# Prevent pieces from overlapping - push apart if too close
+	for i in range(falling_pieces.size()):
+		var piece_a = falling_pieces[i]
+		var sprite_a: Sprite2D = piece_a["sprite"]
+
+		for j in range(i + 1, falling_pieces.size()):
+			var piece_b = falling_pieces[j]
+			var sprite_b: Sprite2D = piece_b["sprite"]
+
+			var diff = sprite_b.position - sprite_a.position
+			var dist = diff.length()
+
+			if dist < MIN_PIECE_DISTANCE and dist > 0:
+				# Push apart - mostly vertically
+				var push = (MIN_PIECE_DISTANCE - dist) * 0.5
+				var push_dir = diff.normalized()
+				sprite_a.position -= push_dir * push
+				sprite_b.position += push_dir * push
+
+	# Update each piece
+	for piece in falling_pieces:
+		var sprite: Sprite2D = piece["sprite"]
+
+		# Fall down at constant speed
+		sprite.position.y += piece["vy"] * delta
+
+		# Rotate slowly
+		sprite.rotation += piece["rotation_speed"] * delta
+
+		# Keep in column bounds
+		var col = piece["column"]
+		var col_center = col_width * (col + 0.5)
+		var col_min = col_center - col_width * 0.4
+		var col_max = col_center + col_width * 0.4
+		sprite.position.x = clamp(sprite.position.x, col_min, col_max)
+
+		# Recycle when off bottom
 		if sprite.position.y > screen_size.y + 150:
-			sprite.position.x = piece_data["column_x"] + randf_range(-30, 30)
-			sprite.position.y = randf_range(-400, -150)
-			piece_data["vy"] = randf_range(0.45, 0.55)
+			recycle_piece(piece, screen_size, col_width)
 
-			var piece_pool = white_pieces if piece_data["is_white"] else black_pieces
-			var new_piece = piece_pool[randi() % piece_pool.size()]
-			if piece_textures.has(new_piece):
-				sprite.texture = piece_textures[new_piece]
+func recycle_piece(piece: Dictionary, screen_size: Vector2, col_width: float):
+	var sprite: Sprite2D = piece["sprite"]
+	var col = piece["column"]
 
-func scramble_title(text: String, progress: float) -> String:
+	# Reset well above screen in its column
+	sprite.position.x = col_width * (col + 0.5) + randf_range(-20, 20)
+	sprite.position.y = randf_range(-300, -150)
+	sprite.rotation = randf_range(-0.3, 0.3)
+
+	piece["vy"] = FALL_SPEED
+	piece["rotation_speed"] = randf_range(-ROTATION_SPEED_MAX, ROTATION_SPEED_MAX)
+
+	# Change piece type
+	var piece_pool = white_pieces if piece["is_white"] else black_pieces
+	var new_piece = piece_pool[randi() % piece_pool.size()]
+	if piece_textures.has(new_piece):
+		sprite.texture = piece_textures[new_piece]
+
+func scramble_text(text: String, progress: float) -> String:
 	if progress >= 1.0:
 		return text
 
 	var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#@$%&!?[]{}/<>"
 	var result = ""
 
+	# Use time to control character flip rate
+	var time_slot = int(Time.get_ticks_msec() / 30)  # Change character every 30ms
+
 	for i in range(text.length()):
 		var char = text[i]
-		if char == " ":
-			result += " "
+		if char == " " or char == "\n":
+			result += char
 		else:
 			var char_progress = progress * 1.5 - (float(i) / text.length()) * 0.3
 
 			if char_progress >= 1.0:
 				result += char
 			elif char_progress <= 0:
-				result += chars[randi() % chars.length()]
+				# Use deterministic random based on position and time
+				var char_index = (time_slot + i * 7) % chars.length()
+				result += chars[char_index]
 			else:
-				if randf() < char_progress * 0.8:
+				if randf() < char_progress * 0.9:
 					result += char
 				else:
-					result += chars[randi() % chars.length()]
+					var char_index = (time_slot + i * 7) % chars.length()
+					result += chars[char_index]
 
 	return result
 
 func update_selection(mode: String):
+	var is_new_selection = (mode != selected_mode)
 	selected_mode = mode
 
 	# Update card styles
@@ -216,13 +305,24 @@ func update_selection(mode: String):
 	if mode_data.has(mode):
 		var data = mode_data[mode]
 		style_selected.border_color = data["color"]
-
-		# Update description panel
-		mode_name_label.text = data["name"]
 		mode_name_label.add_theme_color_override("font_color", data["color"])
-		mode_subtitle_label.text = data["subtitle"]
-		description_label.text = data["description"]
-		features_label.text = data["features"]
+
+		# Store target text for glitch effect
+		target_mode_name = data["name"]
+		target_subtitle = data["subtitle"]
+		target_description = data["description"]
+		target_features = data["features"]
+
+		# Trigger glitch effect if this is a new selection
+		if is_new_selection:
+			desc_glitch_active = true
+			desc_glitch_timer = 0.0
+		else:
+			# First load - set text directly
+			mode_name_label.text = target_mode_name
+			mode_subtitle_label.text = target_subtitle
+			description_label.text = target_description
+			features_label.text = target_features
 
 func _on_card_selected(mode: String):
 	AudioManager.play_click_sound()

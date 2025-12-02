@@ -10,11 +10,24 @@ extends Control
 @onready var slider_fill: ColorRect = $CenterContainer/VBox/SliderContainer/SliderFill
 @onready var min_label: Label = $CenterContainer/VBox/SliderContainer/MinLabel
 @onready var max_label: Label = $CenterContainer/VBox/SliderContainer/MaxLabel
+@onready var falling_pieces_container: Node2D = $FallingPieces
 
 # ELO settings
 var current_elo: int = 1000
 const MIN_ELO = 600
 const MAX_ELO = 2000
+
+# Falling pieces (same as main menu)
+var piece_textures: Dictionary = {}
+var white_pieces = ["W_Pawn", "W_Knight", "W_Bishop", "W_Rook", "W_Queen", "W_King"]
+var black_pieces = ["B_Pawn", "B_Knight", "B_Bishop", "B_Rook", "B_Queen", "B_King"]
+var falling_pieces: Array = []
+var NUM_COLUMNS: int = 6
+
+const PIECE_SCALE: float = 12.0
+const FALL_SPEED: float = 45.0
+const ROTATION_SPEED_MAX: float = 0.08
+const MIN_PIECE_DISTANCE: float = 180.0
 
 # Difficulty tiers with colors
 var difficulty_tiers = [
@@ -44,7 +57,59 @@ func _ready():
 		elo_slider.value = current_elo
 		elo_slider.value_changed.connect(_on_elo_changed)
 
+	# Load pieces and initialize falling pieces
+	load_piece_textures()
+	call_deferred("initialize_falling_pieces")
+
 	update_display()
+
+func load_piece_textures():
+	for piece_name in white_pieces + black_pieces:
+		var path = "res://assets/pieces/" + piece_name + ".png"
+		var texture = load(path)
+		if texture:
+			piece_textures[piece_name] = texture
+
+func initialize_falling_pieces():
+	var screen_size = get_viewport_rect().size
+	if screen_size.x <= 0 or screen_size.y <= 0:
+		screen_size = Vector2(1445, 940)
+
+	var col_width = screen_size.x / NUM_COLUMNS
+	var pieces_per_col = 2
+	var vertical_spacing = (screen_size.y + 400) / pieces_per_col
+
+	# Create pieces evenly spaced in columns
+	for col in range(NUM_COLUMNS):
+		for i in range(pieces_per_col):
+			var piece_pool = white_pieces if (col + i) % 2 == 0 else black_pieces
+			var piece_name = piece_pool[randi() % piece_pool.size()]
+
+			var sprite = Sprite2D.new()
+			if piece_textures.has(piece_name):
+				sprite.texture = piece_textures[piece_name]
+			sprite.scale = Vector2(PIECE_SCALE, PIECE_SCALE)
+			sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+
+			# Center in column with small random offset
+			var x_pos = col_width * (col + 0.5) + randf_range(-20, 20)
+
+			# Evenly space vertically with offset so columns aren't aligned
+			var col_offset = (col % 2) * (vertical_spacing * 0.5)
+			var y_pos = -200 + (i * vertical_spacing) + col_offset + randf_range(-30, 30)
+
+			sprite.position = Vector2(x_pos, y_pos)
+			sprite.rotation = randf_range(-0.3, 0.3)
+
+			falling_pieces_container.add_child(sprite)
+
+			falling_pieces.append({
+				"sprite": sprite,
+				"column": col,
+				"vy": FALL_SPEED,
+				"rotation_speed": randf_range(-ROTATION_SPEED_MAX, ROTATION_SPEED_MAX),
+				"is_white": (col + i) % 2 == 0
+			})
 
 func _process(delta):
 	# Fade in
@@ -58,6 +123,65 @@ func _process(delta):
 
 		if progress >= 1.0:
 			glitch_active = false
+
+	# Update falling pieces
+	var screen_size = get_viewport_rect().size
+	var col_width = screen_size.x / NUM_COLUMNS
+
+	# Prevent pieces from overlapping - push apart if too close
+	for i in range(falling_pieces.size()):
+		var piece_a = falling_pieces[i]
+		var sprite_a: Sprite2D = piece_a["sprite"]
+
+		for j in range(i + 1, falling_pieces.size()):
+			var piece_b = falling_pieces[j]
+			var sprite_b: Sprite2D = piece_b["sprite"]
+
+			var diff = sprite_b.position - sprite_a.position
+			var dist = diff.length()
+
+			if dist < MIN_PIECE_DISTANCE and dist > 0:
+				var push = (MIN_PIECE_DISTANCE - dist) * 0.5
+				var push_dir = diff.normalized()
+				sprite_a.position -= push_dir * push
+				sprite_b.position += push_dir * push
+
+	# Update each piece
+	for piece in falling_pieces:
+		var sprite: Sprite2D = piece["sprite"]
+
+		# Fall down at constant speed
+		sprite.position.y += piece["vy"] * delta
+
+		# Rotate slowly
+		sprite.rotation += piece["rotation_speed"] * delta
+
+		# Keep in column bounds
+		var col = piece["column"]
+		var col_center = col_width * (col + 0.5)
+		var col_min = col_center - col_width * 0.4
+		var col_max = col_center + col_width * 0.4
+		sprite.position.x = clamp(sprite.position.x, col_min, col_max)
+
+		# Recycle when off bottom
+		if sprite.position.y > screen_size.y + 150:
+			recycle_piece(piece, screen_size, col_width)
+
+func recycle_piece(piece: Dictionary, screen_size: Vector2, col_width: float):
+	var sprite: Sprite2D = piece["sprite"]
+	var col = piece["column"]
+
+	sprite.position.x = col_width * (col + 0.5) + randf_range(-20, 20)
+	sprite.position.y = randf_range(-300, -150)
+	sprite.rotation = randf_range(-0.3, 0.3)
+
+	piece["vy"] = FALL_SPEED
+	piece["rotation_speed"] = randf_range(-ROTATION_SPEED_MAX, ROTATION_SPEED_MAX)
+
+	var piece_pool = white_pieces if piece["is_white"] else black_pieces
+	var new_piece = piece_pool[randi() % piece_pool.size()]
+	if piece_textures.has(new_piece):
+		sprite.texture = piece_textures[new_piece]
 
 func _on_elo_changed(value: float):
 	current_elo = int(value)
