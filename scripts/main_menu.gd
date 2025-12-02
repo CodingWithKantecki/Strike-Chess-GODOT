@@ -25,6 +25,11 @@ const FALL_SPEED: float = 45.0  # Consistent speed
 const ROTATION_SPEED_MAX: float = 0.08
 const MIN_PIECE_DISTANCE: float = 180.0  # Minimum distance between pieces
 
+# Random glitch effect
+var glitch_time: float = 0.0
+const GLITCH_CHANCE: float = 0.001  # Chance per frame for a piece to start glitching
+const GLITCH_DURATION: float = 0.3  # How long a glitch lasts
+
 # Parallax scroll speed
 var parallax_offset: float = 0.0
 var PARALLAX_SPEED: float = 0.5
@@ -81,7 +86,9 @@ func initialize_falling_pieces():
 				"column": col,
 				"vy": FALL_SPEED,  # Same speed for all - consistent rain
 				"rotation_speed": randf_range(-ROTATION_SPEED_MAX, ROTATION_SPEED_MAX),
-				"is_white": (col + i) % 2 == 0
+				"is_white": (col + i) % 2 == 0,
+				"glitch_timer": 0.0,
+				"glitch_offset": Vector2.ZERO
 			})
 
 func _process(delta):
@@ -94,6 +101,9 @@ func _process(delta):
 	parallax_offset += PARALLAX_SPEED
 	if parallax_bg:
 		parallax_bg.scroll_offset.x = -parallax_offset
+
+	# Update glitch time
+	glitch_time += delta
 
 	var screen_size = get_viewport_rect().size
 	var col_width = screen_size.x / NUM_COLUMNS
@@ -134,6 +144,16 @@ func _process(delta):
 		var col_max = col_center + col_width * 0.4
 		sprite.position.x = clamp(sprite.position.x, col_min, col_max)
 
+		# Random glitch effect
+		if piece["glitch_timer"] > 0:
+			piece["glitch_timer"] -= delta
+			apply_glitch_effect(piece, sprite)
+			if piece["glitch_timer"] <= 0:
+				reset_glitch_effect(piece, sprite)
+		elif randf() < GLITCH_CHANCE:
+			# Start a new glitch
+			piece["glitch_timer"] = GLITCH_DURATION
+
 		# Recycle when off bottom
 		if sprite.position.y > screen_size.y + 150:
 			recycle_piece(piece, screen_size, col_width)
@@ -172,3 +192,45 @@ func _on_credits_pressed():
 func _on_card_viewer_pressed():
 	AudioManager.play_click_sound()
 	get_tree().change_scene_to_file("res://scenes/card_viewer.tscn")
+
+func apply_glitch_effect(piece: Dictionary, sprite: Sprite2D):
+	"""Apply subtle digital glitch effect to hovered piece."""
+	# Gentle position jitter
+	var jitter_x = randf_range(-3, 3) if randf() > 0.85 else 0
+	var jitter_y = randf_range(-2, 2) if randf() > 0.9 else 0
+	piece["glitch_offset"] = Vector2(jitter_x, jitter_y)
+
+	# Apply offset
+	sprite.offset = piece["glitch_offset"]
+
+	# Subtle color glitch
+	var glitch_intensity = sin(glitch_time * 12.0) * 0.5 + 0.5
+	if randf() > 0.95:
+		# Rare color flash - more muted
+		var colors = [
+			Color(1, 0.7, 0.85, 1),   # Soft pink
+			Color(0.7, 1, 1, 1),       # Soft cyan
+			Color(1, 1, 0.8, 1),       # Soft yellow
+		]
+		sprite.modulate = colors[randi() % colors.size()]
+	elif randf() > 0.85:
+		# Subtle brightness shift
+		var brightness = 1.0 + glitch_intensity * 0.3
+		sprite.modulate = Color(brightness, brightness, brightness, 1)
+	else:
+		# Very subtle color shift
+		sprite.modulate = Color(1.0 + glitch_intensity * 0.08, 1.0, 1.0 + glitch_intensity * 0.05, 1)
+
+	# Rare scale glitch
+	if randf() > 0.97:
+		var scale_glitch = PIECE_SCALE * randf_range(0.95, 1.08)
+		sprite.scale = Vector2(scale_glitch, scale_glitch)
+	else:
+		sprite.scale = Vector2(PIECE_SCALE, PIECE_SCALE)
+
+func reset_glitch_effect(piece: Dictionary, sprite: Sprite2D):
+	"""Reset piece to normal after glitch."""
+	piece["glitch_offset"] = Vector2.ZERO
+	sprite.offset = Vector2.ZERO
+	sprite.modulate = Color(1, 1, 1, 1)
+	sprite.scale = Vector2(PIECE_SCALE, PIECE_SCALE)
